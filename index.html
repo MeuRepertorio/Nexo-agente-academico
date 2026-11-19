@@ -1605,7 +1605,42 @@
   }
 }
 
-</style>
+
+
+    /* =====================================================================
+       LABORATÓRIO GRÁFICO / MODELO DE RESPOSTA
+       ===================================================================== */
+    .lab-panel{margin-top:1.25rem;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.028);border-radius:1.25rem;padding:1rem 1rem 1.05rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+    .lab-panel-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.85rem}
+    .lab-panel-title{font-size:.82rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:600}
+    .lab-panel-subtitle{font-size:1rem;line-height:1.2;color:#fff;font-weight:600;margin-top:.15rem}
+    .lab-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:.42rem .72rem;font-size:.71rem;color:#d6d6dc;background:rgba(255,255,255,.03)}
+    .lab-grid{display:grid;grid-template-columns:1.2fr .96fr;gap:1rem}
+    .lab-block{border:1px solid rgba(255,255,255,.1);background:rgba(7,7,10,.72);border-radius:1rem;padding:.9rem}
+    .lab-block-title{font-size:.78rem;font-weight:600;color:#fff;margin-bottom:.75rem;display:flex;align-items:center;gap:.45rem}
+    .lab-step-list{display:grid;gap:.65rem}
+    .lab-step-item{display:grid;grid-template-columns:2rem 1fr;gap:.7rem;align-items:flex-start;padding:.6rem .65rem;border-radius:.9rem;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+    .lab-step-num{width:2rem;height:2rem;border-radius:.75rem;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;font-size:.8rem;font-weight:700;box-shadow:0 0 18px rgba(255,255,255,.08)}
+    .lab-step-head{font-size:.84rem;font-weight:600;color:#fff;margin-bottom:.2rem}
+    .lab-step-text{font-size:.78rem;line-height:1.6;color:#c8c8d0;white-space:pre-line}
+    .lab-graph-wrap{display:grid;gap:.75rem}
+    .lab-graph-box{border:1px solid rgba(255,255,255,.08);border-radius:1rem;background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01));padding:.8rem;overflow:hidden}
+    .lab-graph-box svg{display:block;width:100%;height:auto;color:#fff}
+    .lab-caption{font-size:.72rem;line-height:1.55;color:#bdbdc6}
+    .lab-drawing-tips{display:grid;gap:.45rem}
+    .lab-drawing-tips li{font-size:.75rem;line-height:1.55;color:#d4d4da;display:flex;gap:.45rem;align-items:flex-start}
+    .lab-drawing-tips li::before{content:'•';color:#fff;opacity:.86}
+    .lab-copy-box{margin-top:.95rem;border:1px dashed rgba(255,255,255,.16);border-radius:1rem;padding:.9rem 1rem;background:rgba(255,255,255,.02)}
+    .lab-copy-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.55rem}
+    .lab-copy-title{font-size:.76rem;font-weight:600;color:#fff}
+    .lab-copy-body{font-size:.76rem;line-height:1.7;color:#d8d8de;white-space:pre-line}
+    .lab-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin-top:.65rem}
+    .lab-mini-card{border:1px solid rgba(255,255,255,.08);border-radius:.9rem;background:rgba(255,255,255,.02);padding:.7rem}
+    .lab-mini-card strong{display:block;font-size:.75rem;color:#fff;margin-bottom:.35rem}
+    .lab-mini-card span{display:block;font-size:.72rem;line-height:1.55;color:#cfcfd7;white-space:pre-line}
+    @media (max-width: 960px){.lab-grid{grid-template-columns:1fr}.lab-mini-grid{grid-template-columns:1fr}}
+
+  </style>
   <!-- Fonte Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -3003,6 +3038,297 @@ body[data-view="timeline"] #app-main h2,body[data-view="activity"] #app-main h2{
       return escapeHtml(str).replace(/\n/g, '<br>');
     }
 
+
+
+    function normalizeStudyText(str) {
+      return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+
+    function labStep(title, text) {
+      return { title, text };
+    }
+
+    function getStudyModel(subject, lesson, act) {
+      const ref = normalizeStudyText(`${subject?.id || ''} ${lesson?.title || ''} ${lesson?.summary || ''} ${act?.title || ''} ${act?.prompt || ''}`);
+      const isMath = subject && subject.id === 'matematica';
+      const isPhysics = subject && subject.id === 'fisica';
+
+      if (isMath && (ref.includes('2o grau') || ref.includes('vertice') || ref.includes('grafico') || ref.includes('maximo') || ref.includes('minimo') || ref.includes('parabola') || ref.includes('proj') || ref.includes('lucro'))) {
+        return {
+          badge: 'Laboratório gráfico',
+          subtitle: 'Modelo para resposta de função do 2º grau',
+          graphTitle: 'Parábola-modelo',
+          graphSvg: getQuadraticGraphSvg(),
+          solveSteps: [
+            labStep('Função e dados', 'Escreva a função na forma y = ax² + bx + c e identifique os coeficientes a, b e c.'),
+            labStep('Raízes', 'Iguale y a zero, resolva a equação e anote onde o gráfico corta o eixo x.'),
+            labStep('Vértice', 'Calcule xᵥ = -b/(2a) e depois yᵥ = f(xᵥ). Se a < 0, o vértice dá o valor máximo; se a > 0, dá o mínimo.'),
+            labStep('Conclusão', 'Feche a resposta dizendo o que o vértice e as raízes representam no contexto da questão (altura máxima, largura, lucro, área etc.).')
+          ],
+          drawTips: [
+            'Desenhe os eixos x e y no caderno.',
+            'Marque as raízes no eixo x e o vértice acima ou abaixo do eixo.',
+            'Observe a concavidade: para baixo quando a < 0; para cima quando a > 0.',
+            'Una os pontos em uma curva suave, sem fazer quinas.'
+          ],
+          miniCards: [
+            {title:'O que não pode faltar', text:'função\nraízes\nvértice\ninterpretação final'},
+            {title:'Frase final', text:'"Logo, a parábola tem raízes nos pontos indicados e o vértice representa o valor máximo/mínimo procurado."'}
+          ],
+          copyTitle: 'Resolução pronta para copiar à mão',
+          copyText: 'Função: y = 6x - x².\nDados: a = -1, b = 6, c = 0.\nRaízes: y = 0 → 6x - x² = 0 → x(6 - x) = 0 → x = 0 ou x = 6.\nVértice: xᵥ = -b/(2a) = -6/(2·(-1)) = 3.\nyᵥ = f(3) = 6·3 - 3² = 18 - 9 = 9.\nConclusão: o vértice é (3, 9). Portanto, a altura máxima é 9 e a largura entre as raízes é 6.\nComo desenhar o gráfico: marcar os pontos (0,0), (3,9) e (6,0) e traçar a parábola com concavidade para baixo.'
+        };
+      }
+
+      if (isMath && (ref.includes('1o grau') || ref.includes('funcao afim') || ref.includes('funcao do 1o grau') || ref.includes('reta') || ref.includes('intersecao'))) {
+        return {
+          badge: 'Laboratório gráfico',
+          subtitle: 'Modelo para resposta de função do 1º grau',
+          graphTitle: 'Reta-modelo',
+          graphSvg: getLinearGraphSvg(),
+          solveSteps: [
+            labStep('Identificar a função', 'Escreva f(x) = ax + b e diga o que a representa (taxa de variação) e o que b representa (valor inicial/intercepto).'),
+            labStep('Encontrar pontos', 'Marque primeiro o ponto do eixo y: (0, b). Depois escolha outro valor de x e calcule o respectivo y.'),
+            labStep('Raiz da função', 'Se a questão pedir a raiz, iguale y a zero e isole x.'),
+            labStep('Interpretar', 'Explique o que a reta indica na situação-problema: crescimento, custo fixo, pontuação, profundidade etc.')
+          ],
+          drawTips: [
+            'Faça os eixos x e y.',
+            'Marque o ponto inicial em y.',
+            'Marque mais um ponto calculado pela função.',
+            'Passe uma reta pelos dois pontos.'
+          ],
+          miniCards: [
+            {title:'Lembrete', text:'a = taxa de variação\nb = valor inicial'},
+            {title:'Frase final', text:'"A função é crescente quando a > 0 e decrescente quando a < 0."'}
+          ],
+          copyTitle: 'Resolução pronta para copiar à mão',
+          copyText: 'Função: y = 2x + 1.\nDados: a = 2 e b = 1.\nPonto inicial: quando x = 0, y = 1. Logo, um ponto é (0,1).\nOutro ponto: quando x = 3, y = 2·3 + 1 = 7. Logo, outro ponto é (3,7).\nRaiz: 0 = 2x + 1 → 2x = -1 → x = -1/2.\nConclusão: a reta é crescente, pois a = 2 > 0.\nComo desenhar o gráfico: marcar os pontos (0,1) e (3,7) e traçar uma reta passando por eles.'
+        };
+      }
+
+      if (isMath && (ref.includes('propor') || ref.includes('grandeza'))) {
+        return {
+          badge: 'Laboratório gráfico',
+          subtitle: 'Modelo para grandezas proporcionais',
+          graphTitle: 'Modelos de proporcionalidade',
+          graphSvg: getProportionalitySvg(),
+          solveSteps: [
+            labStep('Verificar a relação', 'Teste se o quociente y/x é constante (direta) ou se o produto x·y é constante (inversa).'),
+            labStep('Montar a lei', 'Escreva y = kx para proporcionalidade direta ou y = k/x para proporcionalidade inversa.'),
+            labStep('Resolver a conta', 'Substitua os valores conhecidos para encontrar k e depois encontre o valor pedido.'),
+            labStep('Interpretar o gráfico', 'Na direta, o gráfico é uma reta que passa pela origem. Na inversa, é uma curva decrescente (hipérbole).')
+          ],
+          drawTips: [
+            'Na proporcionalidade direta, comece pela origem e marque pontos alinhados.',
+            'Na inversa, faça uma curva decrescente sem tocar os eixos.',
+            'Sempre nomeie os eixos com as grandezas usadas na questão.'
+          ],
+          miniCards: [
+            {title:'Direta', text:'quociente constante\ny/x = k\nreta pela origem'},
+            {title:'Inversa', text:'produto constante\nx·y = k\ncurva decrescente'}
+          ],
+          copyTitle: 'Resolução pronta para copiar à mão',
+          copyText: 'Grandezas diretamente proporcionais: y = kx.\nExemplo: se y/x = 2, então k = 2 e a lei é y = 2x.\nGrandezas inversamente proporcionais: y = k/x.\nExemplo: se x·y = 12, então k = 12 e a lei é y = 12/x.\nConclusão: na direta, quando uma grandeza dobra, a outra também dobra. Na inversa, quando uma dobra, a outra cai pela metade.\nComo desenhar: a direta é uma reta pela origem; a inversa é uma curva decrescente.'
+        };
+      }
+
+      if (isPhysics && (ref.includes('kepler') || ref.includes('orbita') || ref.includes('orbitas') || ref.includes('excentricidade'))) {
+        return {
+          badge: 'Laboratório gráfico',
+          subtitle: 'Modelo para órbitas e excentricidade',
+          graphTitle: 'Diagrama da órbita',
+          graphSvg: getOrbitSvg(),
+          solveSteps: [
+            labStep('Escrever os dados', 'Separe os valores fornecidos para semi-eixo maior (a) e distância focal (c).'),
+            labStep('Aplicar a fórmula', 'Use e = c/a. A excentricidade sempre fica entre 0 e 1 em órbitas elípticas.'),
+            labStep('Fazer a conta', 'Substitua os valores com atenção à unidade usada no enunciado.'),
+            labStep('Interpretar', 'Quanto mais perto de 0, mais circular é a órbita. Quanto mais perto de 1, mais alongada ela fica.')
+          ],
+          drawTips: [
+            'Desenhe uma elipse horizontal.',
+            'Marque o centro e os focos F₁ e F₂.',
+            'Indique o semi-eixo maior com a e a distância do centro ao foco com c.',
+            'Anote o valor final de e ao lado do desenho.'
+          ],
+          miniCards: [
+            {title:'Leitura física', text:'e ≈ 0 → órbita quase circular\ne maior → órbita mais alongada'},
+            {title:'Frase final', text:'"A excentricidade mede o alongamento da órbita."'}
+          ],
+          copyTitle: 'Resolução pronta para copiar à mão',
+          copyText: 'Dados: c = 6 e a = 10.\nFórmula: e = c/a.\nSubstituição: e = 6/10.\nConta: e = 0,6.\nConclusão: a excentricidade da órbita é 0,6, portanto a trajetória é elíptica e moderadamente alongada.\nComo desenhar: fazer uma elipse, marcar o centro, os focos F₁ e F₂, indicar c = 6 e a = 10 e escrever o valor final e = 0,6.'
+        };
+      }
+
+      if (isPhysics && (ref.includes('gravit') || ref.includes('campo gravitacional') || ref.includes('gravidade'))) {
+        return {
+          badge: 'Laboratório gráfico',
+          subtitle: 'Modelo para gravitação e campo gravitacional',
+          graphTitle: 'Relação entre distância e força',
+          graphSvg: getGravitySvg(),
+          solveSteps: [
+            labStep('Identificar a fórmula', 'Observe se a questão pede força gravitacional F = G·m₁·m₂/d² ou campo gravitacional g = GM/r².'),
+            labStep('Organizar os dados', 'Anote massas, distância ou raio antes de substituir na fórmula.'),
+            labStep('Substituir com calma', 'Faça a conta em linha, mantendo os expoentes e as unidades organizados.'),
+            labStep('Interpretar o resultado', 'Explique se o valor aumenta ou diminui quando a distância cresce. Em leis do inverso do quadrado, dobrar a distância reduz o efeito para 1/4.')
+          ],
+          drawTips: [
+            'No eixo x, coloque a distância d ou o raio r.',
+            'No eixo y, coloque F ou g.',
+            'Desenhe uma curva alta no começo e caindo rapidamente conforme a distância aumenta.',
+            'Anote ao lado: "grandeza inversamente proporcional ao quadrado da distância".'
+          ],
+          miniCards: [
+            {title:'Lembrete', text:'se d dobra → F cai para 1/4\nse d triplica → F cai para 1/9'},
+            {title:'Frase final', text:'"A força/campo diminui com o quadrado da distância."'}
+          ],
+          copyTitle: 'Resolução pronta para copiar à mão',
+          copyText: 'Fórmula: F = G·m₁·m₂/d².\nPasso 1: anotar os dados do enunciado.\nPasso 2: substituir cada valor na fórmula.\nPasso 3: resolver primeiro o produto das massas e depois o quadrado da distância.\nPasso 4: dividir os valores e apresentar a unidade final.\nConclusão: a força gravitacional diminui quando a distância aumenta, pois F é inversamente proporcional a d².\nComo desenhar: fazer um gráfico decrescente, com a distância no eixo x e a força no eixo y.'
+        };
+      }
+
+      return null;
+    }
+
+    function renderStudyModel(subject, lesson, act) {
+      const model = getStudyModel(subject, lesson, act);
+      if (!model) return '';
+      return `
+        <section class="lab-panel">
+          <div class="lab-panel-header">
+            <div>
+              <div class="lab-panel-title">${escapeHtml(model.badge)}</div>
+              <div class="lab-panel-subtitle">${escapeHtml(model.subtitle)}</div>
+            </div>
+            <span class="lab-chip">Gráfico + instruções + modelo de caderno</span>
+          </div>
+          <div class="lab-grid">
+            <div class="lab-block">
+              <div class="lab-block-title">Resolução organizada</div>
+              <div class="lab-step-list">
+                ${model.solveSteps.map((step, idx) => `
+                  <div class="lab-step-item">
+                    <div class="lab-step-num">${idx + 1}</div>
+                    <div>
+                      <div class="lab-step-head">${escapeHtml(step.title)}</div>
+                      <div class="lab-step-text">${formatMultiline(step.text)}</div>
+                    </div>
+                  </div>`).join('')}
+              </div>
+            </div>
+            <div class="lab-graph-wrap">
+              <div class="lab-block">
+                <div class="lab-block-title">${escapeHtml(model.graphTitle)}</div>
+                <div class="lab-graph-box">${model.graphSvg}</div>
+                <div class="lab-caption">Use este gráfico como modelo visual de organização. A proposta é orientar o desenho no caderno, não substituir a leitura do enunciado.</div>
+              </div>
+              <div class="lab-block">
+                <div class="lab-block-title">Como desenhar no caderno</div>
+                <ul class="lab-drawing-tips">
+                  ${model.drawTips.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                </ul>
+                <div class="lab-mini-grid">
+                  ${model.miniCards.map(card => `<div class="lab-mini-card"><strong>${escapeHtml(card.title)}</strong><span>${formatMultiline(card.text)}</span></div>`).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="lab-copy-box">
+            <div class="lab-copy-head">
+              <div class="lab-copy-title">${escapeHtml(model.copyTitle)}</div>
+              <button id="btn-copy-model" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium border border-white/15 bg-white/[0.05] text-white hover:bg-white/[0.1] transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copiar modelo de caderno
+              </button>
+            </div>
+            <div class="lab-copy-body">${formatMultiline(model.copyText)}</div>
+          </div>
+        </section>`;
+    }
+
+    function getQuadraticGraphSvg() {
+      return `<svg viewBox="0 0 300 260" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <pattern id="labGridQuad" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" stroke="rgba(255,255,255,.06)"/></pattern>
+        </defs>
+        <rect width="300" height="260" fill="url(#labGridQuad)" opacity=".9"/>
+        <path d="M34 226H278" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M54 242V20" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M54 226 C 95 70, 162 16, 242 226" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M148 226V56" stroke="rgba(255,255,255,.28)" stroke-dasharray="6 6" stroke-width="1.5"/>
+        <circle cx="54" cy="226" r="4.5" fill="white"/><circle cx="148" cy="56" r="4.5" fill="white"/><circle cx="242" cy="226" r="4.5" fill="white"/>
+        <text x="44" y="222" fill="white" font-size="11">(0,0)</text>
+        <text x="139" y="45" fill="white" font-size="11">(3,9)</text>
+        <text x="232" y="222" fill="white" font-size="11">(6,0)</text>
+        <text x="285" y="234" fill="white" font-size="12">x</text>
+        <text x="60" y="18" fill="white" font-size="12">y</text>
+      </svg>`;
+    }
+
+    function getLinearGraphSvg() {
+      return `<svg viewBox="0 0 300 240" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><pattern id="labGridLin" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" stroke="rgba(255,255,255,.06)"/></pattern></defs>
+        <rect width="300" height="240" fill="url(#labGridLin)"/>
+        <path d="M34 204H278" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M54 224V22" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M54 172L210 68" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="54" cy="172" r="4.5" fill="white"/><circle cx="210" cy="68" r="4.5" fill="white"/>
+        <text x="44" y="165" fill="white" font-size="11">(0,1)</text>
+        <text x="201" y="58" fill="white" font-size="11">(3,7)</text>
+        <text x="285" y="213" fill="white" font-size="12">x</text>
+        <text x="60" y="18" fill="white" font-size="12">y</text>
+      </svg>`;
+    }
+
+    function getProportionalitySvg() {
+      return `<svg viewBox="0 0 300 240" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><pattern id="labGridProp" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" stroke="rgba(255,255,255,.06)"/></pattern></defs>
+        <rect width="300" height="240" fill="url(#labGridProp)"/>
+        <path d="M34 204H278" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M54 224V22" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M54 204L212 72" stroke="white" stroke-width="2.7" stroke-linecap="round"/>
+        <path d="M102 64C129 88 158 120 172 204" stroke="rgba(255,255,255,.88)" stroke-width="2.6" stroke-linecap="round"/>
+        <text x="168" y="63" fill="white" font-size="11">direta</text>
+        <text x="92" y="56" fill="white" font-size="11">inversa</text>
+        <text x="285" y="213" fill="white" font-size="12">x</text>
+        <text x="60" y="18" fill="white" font-size="12">y</text>
+      </svg>`;
+    }
+
+    function getOrbitSvg() {
+      return `<svg viewBox="0 0 300 210" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <ellipse cx="150" cy="104" rx="110" ry="60" stroke="white" stroke-width="2.6"/>
+        <circle cx="112" cy="104" r="4.4" fill="white"/><circle cx="188" cy="104" r="4.4" fill="white"/>
+        <circle cx="150" cy="104" r="2.8" fill="rgba(255,255,255,.85)"/>
+        <path d="M40 170H260" stroke="rgba(255,255,255,.92)" stroke-width="1.8"/>
+        <path d="M40 166V174M260 166V174M150 96V112" stroke="rgba(255,255,255,.92)" stroke-width="1.6"/>
+        <path d="M150 52V156" stroke="rgba(255,255,255,.16)" stroke-dasharray="6 6"/>
+        <path d="M112 84H150" stroke="rgba(255,255,255,.92)" stroke-width="1.8"/>
+        <text x="106" y="94" fill="white" font-size="12">F₁</text>
+        <text x="182" y="94" fill="white" font-size="12">F₂</text>
+        <text x="145" y="94" fill="white" font-size="11">c</text>
+        <text x="146" y="184" fill="white" font-size="12">a</text>
+        <text x="144" y="98" fill="white" font-size="11">•</text>
+      </svg>`;
+    }
+
+    function getGravitySvg() {
+      return `<svg viewBox="0 0 300 240" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><pattern id="labGridGrav" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" stroke="rgba(255,255,255,.06)"/></pattern></defs>
+        <rect width="300" height="240" fill="url(#labGridGrav)"/>
+        <path d="M34 204H278" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M54 224V22" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+        <path d="M62 46C86 56 110 72 128 98C150 129 164 154 238 198" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <text x="72" y="57" fill="white" font-size="11">F alto</text>
+        <text x="214" y="195" fill="white" font-size="11">F baixo</text>
+        <text x="285" y="213" fill="white" font-size="12">d</text>
+        <text x="60" y="18" fill="white" font-size="12">F</text>
+      </svg>`;
+    }
+
     function getFilteredSubjects() {
       if (state.bookFilter === 'all') return SUBJECTS;
       return SUBJECTS.filter((s) => s.book === state.bookFilter);
@@ -3301,6 +3627,7 @@ body[data-view="timeline"] #app-main h2,body[data-view="activity"] #app-main h2{
       const lesson = subject.lessons[state.lessonIndex];
       const act = lesson.activities[state.activityIndex] || lesson.activities[0];
       const done = isActivityDone(subject.id, lesson.num, act.id);
+      const studyModel = getStudyModel(subject, lesson, act);
 
       const flat = getFlatActivityList(subject);
       const currentFlatIdx = flat.findIndex(
@@ -3370,6 +3697,8 @@ body[data-view="timeline"] #app-main h2,body[data-view="activity"] #app-main h2{
                 </div>
               </div>
 
+              ${studyModel ? renderStudyModel(subject, lesson, act) : ''}
+
               <!-- Ações -->
               <div class="mt-6 flex flex-wrap items-center gap-3">
                 <button
@@ -3379,6 +3708,15 @@ body[data-view="timeline"] #app-main h2,body[data-view="activity"] #app-main h2{
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   Copiar resposta
                 </button>
+
+                ${studyModel ? `
+                <button
+                  id="btn-copy-model-secondary"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border border-white/15 bg-white/[0.03] text-[#d5d5db] hover:border-white/30 hover:text-white transition-all"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                  Copiar modelo de caderno
+                </button>` : ''}
 
                 <button
                   id="btn-toggle-done"
@@ -3470,6 +3808,15 @@ body[data-view="timeline"] #app-main h2,body[data-view="activity"] #app-main h2{
         copyTextSafe(`${subject.name} — Aula ${String(lesson.num).padStart(2, '0')} (${act.title})\n\n${act.answer}`);
       });
 
+      if (studyModel) {
+        const copyModelButtons = ['btn-copy-model', 'btn-copy-model-secondary']
+          .map((id) => document.getElementById(id))
+          .filter(Boolean);
+        copyModelButtons.forEach((btn) => btn.addEventListener('click', () => {
+          copyTextSafe(`${subject.name} — Aula ${String(lesson.num).padStart(2, '0')} (${act.title})\n\n${studyModel.copyText}`);
+        }));
+      }
+
       // Marcar concluída
       document.getElementById('btn-toggle-done').addEventListener('click', () => {
         const key = getActKey(subject.id, lesson.num, act.id);
@@ -3507,7 +3854,7 @@ body[data-view="timeline"] #app-main h2,body[data-view="activity"] #app-main h2{
         };
         const contentMap = {
           concept: act.concept,
-          steps: act.steps,
+          steps: studyModel ? `${act.steps}\n\nModelo visual disponível abaixo: use o bloco \"${'Laboratório gráfico'}\" para copiar a estrutura da conta e do gráfico no caderno.` : act.steps,
           tip: act.tip,
         };
         typeIntoNexo(titleMap[mode], contentMap[mode]);
