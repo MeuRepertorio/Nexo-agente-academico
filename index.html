@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXO — Agente Acadêmico</title>
+
+<!-- Fonte Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+
+  <style>
+    /* =========================================================
+       ESTILOS BASE & ATMOSFERA ESPACIAL MINIMALISTA
+       ========================================================= */
+    :root {
+      --bg: #050507;
+      --fg: #f5f5f7;
+      --muted: #8a8a93;
+      --border: rgba(255, 255, 255, 0.1);
+      --border-strong: rgba(255, 255, 255, 0.28);
+      --glass: rgba(18, 18, 22, 0.75);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Canvas de partículas espaciais */
+    #space-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Brilho radial sutil no fundo */
+    .ambient-glow {
+      position: fixed;
+      top: -20vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80vw;
+      height: 55vh;
+      background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.045) 0%, rgba(5, 5, 7, 0) 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Superfície Glassmorphism Fosco */
+    .glass-card {
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 0.3s ease,
+                  box-shadow 0.35s ease,
+                  background-color 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(24, 24, 30, 0.82);
+    }
+
+    /* Card de matéria em foco no carrossel */
+    .subject-card-active {
+      border-color: rgba(255, 255, 255, 0.38) !important;
+      box-shadow: 0 0 35px -8px rgba(255, 255, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      transform: translateY(-6px) scale(1.02);
+      background: rgba(26, 26, 32, 0.88) !important;
+    }
+
+    /* Flutuação sutil para os cards do Hub */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    .float-anim {
+      animation: floatSlow 6s ease-in-out infinite;
+    }
+
+    /* Transição suave entre telas */
+    @keyframes screenIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .screen-enter {
+      animation: screenIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Linha divisória luminosa fina */
+    .horizon-line {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.22) 25%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0.22) 75%, rgba(255,255,255,0) 100%);
+    }
+
+    /* Scrollbar ultra-discreta */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .thin-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .thin-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .thin-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 9999px;
+    }
+    .thin-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    /* Cursor piscando durante efeito de digitação do NEXO */
+    @keyframes blinkCaret {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .typing-caret::after {
+      content: '▍';
+      margin-left: 2px;
+      color: #f5f5f7;
+      animation: blinkCaret 0.8s infinite;
+    }
+
+    /* Pulso discreto no nó ativo da linha temporal */
+    .node-glow {
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.55);
+    }
+  </style>
+
+  <!-- NEXO ULTRA PRIME — identidade visual e motion system -->
+  <meta name="theme-color" content="#05060d" />
+  <meta name="description" content="NEXO — Agente Acadêmico. 8 matérias, 114 aulas e respostas, com uma experiência visual premium." />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/tailwind-local.css" />
+  <link rel="stylesheet" href="assets/premium.css" />
+</head>
+<body class="antialiased selection:bg-white/20 selection:text-white">
+  <!-- Fundo espacial animado -->
+  <canvas id="space-canvas"></canvas>
+  <div class="ambient-glow"></div>
+
+  <!-- Container Principal -->
+  <div class="relative z-10 min-h-screen flex flex-col">
+    <!-- =========================================================
+         CABEÇALHO GLOBAL MINIMALISTA
+         ========================================================= -->
+    <header class="sticky top-0 z-30 border-b border-white/10 bg-[#050507]/80 backdrop-blur-xl">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        <!-- Logo + Badge -->
+        <button
+          id="btn-logo-home"
+          class="flex items-center gap-2.5 group focus:outline-none text-left"
+          title="Voltar ao início"
+        >
+          <div class="w-8 h-8 rounded-lg border border-white/20 bg-white/[0.06] flex items-center justify-center group-hover:border-white/40 transition-colors">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 18V6l10 12V6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="19" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-semibold tracking-[0.18em] text-sm sm:text-base text-white">NEXO</span>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border border-white/15 bg-white/[0.04] text-[#b4b4bd]">
+              Agente Acadêmico
+            </span>
+          </div>
+        </button>
+
+        <!-- Barra de Busca Global (abre Command Palette com Ctrl+K) -->
+        <button
+          id="btn-open-search"
+          class="flex-1 max-w-md flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20 text-xs sm:text-sm text-[#8a8a93] transition-all"
+        >
+          <span class="flex items-center gap-2 truncate">
+            <svg class="w-4 h-4 shrink-0 text-[#8a8a93]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m20 20-3.5-3.5" stroke-linecap="round"/>
+            </svg>
+            <span class="truncate">Buscar tema, aula ou resposta...</span>
+          </span>
+          <kbd class="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-[#8a8a93] bg-white/[0.05] border border-white/10 rounded-md">
+            Ctrl K
+          </kbd>
+        </button>
+
+        <!-- Progresso Global Discreto -->
+        <div class="hidden sm:flex items-center gap-2.5 text-xs text-[#8a8a93]">
+          <span id="global-progress-text" class="tabular-nums">0 / 114 aulas</span>
+          <div class="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
+            <div id="global-progress-bar" class="h-full bg-white rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         ÁREA DINÂMICA DAS 3 TELAS
+         ========================================================= -->
+    <main id="app-main" class="flex-1 flex flex-col"></main>
+
+    <!-- Rodapé ultra-discreto -->
+    <footer class="border-t border-white/[0.06] py-4 px-4 sm:px-6 text-center text-[11px] text-[#6d6d76]">
+      NEXO — Agente Acadêmico · Currículo em Ação Vol. 4 (1ª série EM · 8 matérias · 114 aulas) · 100% local
+    </footer>
+  </div>
+
+  <!-- =========================================================
+       MODAL DE BUSCA GLOBAL (COMMAND PALETTE — CTRL+K)
+       ========================================================= -->
+  <div
+    id="search-modal"
+    class="fixed inset-0 z-50 hidden items-start justify-center pt-[10vh] px-4 bg-black/75 backdrop-blur-md"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="w-full max-w-2xl rounded-2xl border border-white/15 bg-[#0d0d11]/95 shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
+        <svg class="w-4 h-4 text-[#8a8a93] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-3.5-3.5" stroke-linecap="round"/>
+        </svg>
+        <input
+          id="search-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Digite uma matéria, tema, fórmula ou palavra-chave (ex: Kepler, Barroco, pH, Mendel)..."
+          class="w-full bg-transparent text-sm text-white placeholder-[#6f6f78] focus:outline-none"
+        />
+        <button id="btn-close-search" class="px-2 py-1 text-[11px] text-[#8a8a93] hover:text-white border border-white/10 rounded-lg">
+          ESC
+        </button>
+      </div>
+      <div id="search-results" class="max-h-[60vh] overflow-y-auto thin-scroll p-2 space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- Toast de feedback visual (substitui qualquer alert) -->
+  <div
+    id="toast"
+    class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-300 px-4 py-2.5 rounded-xl border border-white/20 bg-[#141419]/95 backdrop-blur-xl text-xs font-medium text-white shadow-xl"
+  ></div>
+
+  <script>
+    /* =====================================================================
+       1. FUNDO ESPACIAL MINIMALISTA (CANVAS RESPONSIVO)
+       ===================================================================== */
+    (function initSpaceCanvas() {
+      const canvas = document.getElementById('space-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+      let w = 0;
+      let h = 0;
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+        const count = Math.min(90, Math.floor((w * h) / 18000));
+        stars = Array.from({ length: count }, () => ({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: Math.random() * 1.15 + 0.25,
+          vx: (Math.random() - 0.5) * 0.08,
+          vy: (Math.random() - 0.5) * 0.08,
+          alpha: Math.random() * 0.45 + 0.1,
+          phase: Math.random() * Math.PI * 2,
+        }));
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        for (const s of stars) {
+          s.x += s.vx;
+          s.y += s.vy;
+          s.phase += 0.012;
+          if (s.x < 0) s.x = w;
+          if (s.x > w) s.x = 0;
+          if (s.y < 0) s.y = h;
+          if (s.y > h) s.y = 0;
+          const a = s.alpha * (0.65 + 0.35 * Math.sin(s.phase));
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(245, 245, 247, ${a.toFixed(3)})`;
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      draw();
+    })();
+
+    /* =====================================================================
+       2. ÍCONES SVG MINIMALISTAS POR MATÉRIA
+       ===================================================================== */
+    const SUBJECT_ICONS = {
+      historia: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 6v6l4 2" stroke-linecap="round"/><circle cx="12" cy="12" r="9"/></svg>`,
+      geografia: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14.5 14.5 0 0 0 0 18M12 3a14.5 14.5 0 0 1 0 18"/></svg>`,
+      ingles: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h14" stroke-linecap="round"/><circle cx="18" cy="12" r="2.5"/></svg>`,
+      fisica: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(30 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(-30 12 12)"/></svg>`,
+      biologia: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M7 4c0 6 10 6 10 16M17 4c0 6-10 6-10 16M8 8h8M8 16h8" stroke-linecap="round"/></svg>`,
+      quimica: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 3h6M10 3v5.5L5.2 17.6A2 2 0 0 0 7 20.5h10a2 2 0 0 0 1.8-2.9L14 8.5V3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 15h8"/></svg>`,
+      portugues: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      matematica: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 18c2.5-10 6.5-14 8-14s5.5 4 8 14" stroke-linecap="round"/><path d="M3 12h18" stroke-dasharray="2 3"/></svg>`,
+    };
+
+    /* =====================================================================
+       3. BASE DE DADOS COMPLETA — 8 MATÉRIAS · 114 AULAS · RESPOSTAS RESUMIDAS
+       ===================================================================== */
+    // Helper compacto para montar cada aula mantendo o código limpo, rápido e completo
+    function makeLesson(num, title, summary, praticaList, cadernoText, meta = {}) {
+      const activities = [];
+      praticaList.forEach((item, idx) => {
+        activities.push({
+          id: `p${idx + 1}`,
+          type: 'Na prática',
+          title: item.t || `Atividade ${idx + 1}`,
+          prompt: item.p,
+          answer: item.a,
+          concept: item.c || meta.c || `Conceito-chave de ${title}: ${summary}`,
+          steps: item.s || meta.s || `1. Releia o comando central da atividade.\n2. Relacione o enunciado ao conceito principal da aula (${title}).\n3. Sintetize a resposta objetiva destacada ao lado.`,
+          tip: item.d || meta.d || `Foque nos termos centrais de "${title}" — são os pontos mais cobrados em provas e vestibulares.`,
+        });
+      });
+      if (cadernoText) {
+        activities.push({
+          id: 'caderno',
+          type: 'Caderno de Exercícios',
+          title: 'Questões do Caderno de Exercícios',
+          prompt: `Gabarito resumido das questões externas referentes à Aula ${String(num).padStart(2, '0')} (${title}).`,
+          answer: cadernoText,
+          concept: meta.c || `Revisão aplicada de ${title}: ${summary}`,
+          steps: `1. Identifique a palavra-chave de cada enunciado de vestibular/ENEM.\n2. Elimine distratores que contradizem a base teórica da aula.\n3. Confira o gabarito direto listado no card de resposta.`,
+          tip: meta.d || `Em questões de vestibular sobre ${title}, atenção especial a comandos como "EXCETO", "respectivamente" e relações de causa/consequência.`,
+        });
+      }
+      return { num, title, summary, activities };
+    }
+
+    const SUBJECTS = [
+      /* -------------------------------------------------------------------
+         1. HISTÓRIA (Apostila 1 — 12 Aulas)
+         ------------------------------------------------------------------- */
+      {
+        id: 'historia',
+        name: 'História',
+        book: 1,
+        bookLabel: 'Apostila 1 · Humanas & Inglês',
+        subtitle: 'Brasil Colônia, Escravidão, Liberalismo e Revolução Industrial',
+        lessons: [
+          makeLesson(1, 'Os mapas contam histórias', 'Cartografia colonial como instrumento político de poder, fronteiras e o Tratado de Madri (1750).', [
+            {
+              t: 'Atividade 1 — Cartografia, Rios e Tratado de Madri',
+              p: 'Análise da Carta de Bartolomeu Lasso (1586), do Mapa das Cortes (1749) e do Tratado de Madri (1750).',
+              a: '• Bartolomeu Lasso (1586): omitiu caravelas, indígenas e seres mitológicos → mapa mais técnico e prático voltado à navegação e administração.\n• Mapa das Cortes (1749): destacou rios como vias estratégicas de ocupação/fronteira e usou distorções intencionais para ampliar a posse portuguesa.\n• Tratado de Madri (1750): aplicou o princípio do uti possidetis (terra de quem ocupa), sendo sucesso diplomático consolidado pela centralização dos governos-gerais.',
+              c: 'Na época moderna, mapas não eram neutros: funcionavam como ferramentas diplomáticas e de dominação territorial.',
+              s: '1. Compare elementos ornamentais x técnicos em Lasso.\n2. Relacione os rios à interiorização colonial.\n3. Conecte o uti possidetis à expansão além de Tordesilhas.',
+              d: 'Lembre-se da expressão latina "uti possidetis" = posse efetiva garante o direito à terra (Tratado de Madri, 1750).'
+            }
+          ], '• Q1 (ENEM 2022): c) afirmação das formas de dominação — a cartografia europeia ignorou saberes ameríndios para legitimar o controle colonial.'),
+
+          makeLesson(2, 'Bandeirantes, indígenas e jesuítas', 'Transformação da historiografia paulista: do mito heroico à revisão crítica sobre violência e memória.', [
+            {
+              t: 'Atividade 1 — Dissertação sobre a historiografia bandeirante',
+              p: 'Como a visão historiográfica sobre os bandeirantes mudou ao longo do tempo?',
+              a: '• Visão tradicional (início do séc. XX): autores como Cassiano Ricardo, Ruy Barbosa e telas como a de Benedito Calixto exaltavam os bandeirantes como heróis épicos da expansão territorial e da identidade paulista.\n• Revisão crítica recente: historiadores como John Manuel Monteiro evidenciaram o sistema de violência e escravização indígena (conflitos com jesuítas).\n• Debate atual (Marcelo Cheche): questionar monumentos não apaga a história, mas expõe disputas de memória.',
+              c: 'A historiografia é revisada conforme novas fontes e sensibilidades sociais questionam narrativas oficiais.',
+              s: '1. Contraste os textos de exaltação (I e II) com a crítica de Monteiro (III).\n2. Inclua a análise de disputas de memória de Cheche (IV).',
+              d: 'No ENEM, a construção da imagem heroica bandeirante no Museu Paulista liga-se à afirmação política de São Paulo na Primeira República.'
+            }
+          ], '• Q2 (ENEM 2015): a) afirmava a centralidade de um estado na política do país (protagonismo paulista).'),
+
+          makeLesson(3, 'A vida não era doce', 'Estrutura latifundiária, monocultura e hierarquia escravista na sociedade açucareira colonial.', [
+            {
+              t: 'Atividade 1 — Consequências e heranças da economia açucareira',
+              p: 'Impactos da centralidade do açúcar na colônia e permanências na questão fundiária atual.',
+              a: '• Consequências coloniais: grande desigualdade — senhores de engenho concentraram riqueza/poder enquanto escravizados sofreram exploração brutal e pequenos produtores ficaram à margem.\n• Heranças atuais: concentração fundiária (latifúndios), desigualdades sociais e raciais e economia ainda fortemente voltada à exportação de produtos primários.',
+            },
+            {
+              t: 'Atividade 2 — Organização física e social do engenho',
+              p: 'Como o espaço do engenho refletia hierarquia, exploração e controle de poder?',
+              a: '• O engenho era um microcosmo da colônia: a casa-grande simbolizava o poder econômico, político e moral da elite agrária; a senzala, a moenda e as caldeiras materializavam a subjugação e a violência cotidiana contra os escravizados (como relatado por Henry Koster).',
+            }
+          ], '• Q3 (UNESPAR 2015): e) III e IV estão corretas (sociedade patriarcal/escravocrata/religiosa; engenho como unidade básica).', {
+            c: 'O sistema de plantation combina latifúndio, monocultura, trabalho escravizado e produção voltada ao mercado externo.',
+            d: 'Cuidado com pegadinhas: a produção açucareira era voltada ao mercado EXTERNO (exportação) e tinha baixa mobilidade social.'
+          }),
+
+          makeLesson(4, 'Nem tudo que reluz é ouro', 'Sociedade mineradora no séc. XVIII: urbanização, fiscalização da Coroa e Guerra dos Emboabas.', [
+            {
+              t: 'Atividade 1 — Tributação (Quinto e Capitação)',
+              p: 'Como o quinto e a capitação refletiam o controle da Coroa e afetavam a sociedade mineradora?',
+              a: '• Interesses da Coroa: ampliar a arrecadação régia, intensificar a fiscalização e combater o contrabando de ouro.\n• Impacto da capitação: cobrada por cabeça de escravizado (>12 anos), sobre faiscadores livres e sobre estabelecimentos comerciais, encarecendo a atividade e atingindo diversos setores sociais.',
+            },
+            {
+              t: 'Atividade 2 — Consequências territoriais da Guerra dos Emboabas',
+              p: 'Quais foram os desdobramentos territoriais do conflito (1707–1709)?',
+              a: '• O conflito entre paulistas e forasteiros (emboabas) levou a Coroa a reorganizar o poder nas Minas e estimulou bandeirantes a avançarem para o oeste, descobrindo ouro em Mato Grosso (Cuiabá 1719, Vila Bela 1752) e Goiás (Vila Boa 1727), além de consolidar vilas mineiras (Sabará 1711, Vila Rica 1711, São João del-Rei 1713).',
+            }
+          ], '• Q4 (UNESP 2021): b) implementação do regime de intendências e nova estrutura administrativa.\n• Q5 (ENEM 2013): d) fiscalização estatal diante das particularidades econômicas.', {
+            c: 'Diferente do açúcar rural, a mineração gerou intensa urbanização, mercado interno e rigorosa fiscalização estatal.',
+            d: 'Quinto = 20% nas Casas de Fundição; Capitação = imposto por cabeça (escravizado, faiscador ou comércio).'
+          }),
+
+          makeLesson(5, 'O papel das colônias ibéricas', 'Comparação entre as estruturas coloniais de Portugal e Espanha sob o Pacto Colonial.', [
+            {
+              t: 'Atividade 1 — Importância do ouro e da prata',
+              p: 'Por que a busca por metais preciosos era constante na colonização ibérica?',
+              a: '• Ouro e prata sustentavam o sistema monetário bimetalista europeu (cunhagem de moedas para trocas). A prata sofria forte pressão por escoar para o Oriente, exigindo reposição constante vinda das colônias.',
+            },
+            {
+              t: 'Atividade 2 — Função das colônias e comparação Portugal × Espanha',
+              p: 'Qual a função colonial e quais as principais diferenças entre América Espanhola e Portuguesa?',
+              a: '• Função (Pacto Colonial): fornecer matérias-primas/metais e consumir manufaturados, sob monopólio exclusivo da metrópole.\n• América Espanhola: mita e encomienda (indígenas), divisão em Vice-Reinos/Capitanias Gerais, cargos restritos aos chapetones, presença de universidades e imprensa.\n• América Portuguesa: predomínio da escravidão africana, capitanias/governos-gerais, maior participação local em câmaras e proibição de universidades/imprensa.',
+            }
+          ], '• Q6 (UNIVESP 2019): b) as colônias poderiam comercializar exclusivamente com a sua metrópole ou agentes autorizados.'),
+
+          makeLesson(6, 'Rotas de injustiça', 'Comércio triangular atlântico, tráfico transatlântico de escravizados e diáspora africana.', [
+            {
+              t: 'Atividade 1 — Mapa mental do tráfico atlântico',
+              p: 'Principais eixos da dinâmica do tráfico de escravizados e do comércio triangular.',
+              a: '• Rotas (Comércio Triangular): Europa (armas, tecidos, manufaturados) → África (captura e embarque de escravizados, incentivando guerras internas) → Américas (açúcar, tabaco, algodão, ouro).\n• Intercâmbios e Diáspora: travessia desumana em navios negreiros, apagamento de identidades étnicas, mas também circulação cultural e acumulação de capital na Europa.',
+            }
+          ], '• Q1 (ENEM 2019): a) difusão de hábitos alimentares — a farinha de mandioca atravessou o Atlântico e integrou mercados africanos.'),
+
+          makeLesson(7, 'Caminhos do cativeiro e da resistência', 'Estrutura econômica escravista, violência cotidiana e formas individuais e coletivas de luta.', [
+            {
+              t: 'Atividade 1 — Infográfico sobre a escravidão no Brasil',
+              p: 'Síntese dos 4 eixos: economia, violência, resistência e cotidiano.',
+              a: '• Economia e Comércio: ~12,5 milhões de africanos traficados (~1,8 milhão morreu na travessia); produção de açúcar, ouro, café, tabaco e algodão.\n• Violência e Controle: feitores, castigos corporais, vigilância e restrição de circulação.\n• Resistência: individual (sabotagem, fugas, preservação cultural) e coletiva (revoltas como Malês e quilombos como Palmares).\n• Cotidiano: jornadas da aurora ao escurecer nas lavouras/minas (vida útil média de 7–10 anos) e trabalho urbano (domésticos, de ganho e de aluguel).',
+            }
+          ], '• Q2 (UNEB 2019): c) relação variava do combate aberto a estratégias sutis como religiosidade e preservação cultural.'),
+
+          makeLesson(8, 'Do tráfico à resistência e o legado do racismo', 'Institucionalização da violência escravista, racismo estrutural contemporâneo e lutas negras.', [
+            {
+              t: 'Atividade 1 — Análise dos 3 temas (Violência, Racismo e Resistência)',
+              p: 'Comparação de fontes históricas, indicadores sociais atuais e estratégias de resistência.',
+              a: '• Tema 1 (Violência institucional): anúncio de 1842 desumaniza pessoas como mercadorias no âmbito privado; Lei nº 4/1835 institucionaliza pena de morte e açoites pelo Estado.\n• Tema 2 (Racismo estrutural): indicadores (ensino superior: 1/5 brancos vs. 1/11 negros; patrões: 1/17 vs. 1/33; cárcere: 68% negros) provam que o racismo organiza oportunidades e privilégios.\n• Tema 3 (Resistência): evoluiu de revoltas armadas (Malês) e irmandades religiosas (N. Sra. do Rosário) na escravidão para organização política exigindo políticas públicas no pós-abolição (Carta do MNU, 1978).',
+            }
+          ], '• Q1 (ENEM 2019): c) adoção de ações afirmativas.\n• Q2 (UNESP 2018): c) a disparidade da composição étnica entre réus e juízes é fator de crítica ao Judiciário.'),
+
+          makeLesson(9, 'Da monarquia ao parlamentarismo', 'Revoluções Inglesas do séc. XVII, puritanismo e a Declaração de Direitos (Bill of Rights, 1689).', [
+            {
+              t: 'Atividade 1 — Ideais e objetivos dos puritanos',
+              p: 'Por que os puritanos atuaram na política e o que buscavam na Revolução Inglesa?',
+              a: '• Ideais: acreditavam que a Igreja Anglicana estava corrompida e controlada pelo Estado; para purificá-la ("glória de Deus"), precisavam agir politicamente.\n• Objetivos: purificar Igreja e Estado, combater o absolutismo monárquico, limitar o poder do rei e fortalecer o Parlamento.',
+            }
+          ], '• Q1 (ENEM 2021): a) pluralidade das demandas sociais (camponeses, tecelões e religiosos além do Parlamento).\n• Q2 (ENEM 2012): b) limitação do poder do soberano – Absolutismo.'),
+
+          makeLesson(10, '"Laissez-faire": autonomia do mercado', 'Liberalismo político (Locke, Montesquieu) e liberalismo econômico (Adam Smith, David Ricardo).', [
+            {
+              t: 'Atividade 1 — Liberalismo Político, Econômico e Trabalho',
+              p: 'Síntese das 3 estações: papel do Estado, contrato social, laissez-faire e valor-trabalho.',
+              a: '• Político (Locke/Montesquieu): liberdade individual, divisão dos 3 poderes, contrato social para proteger direitos naturais (vida, liberdade, propriedade); fundamentou a Revolução Gloriosa e a burguesia.\n• Econômico (Smith/Ricardo): Estado mínimo (garantir contratos, ordem e propriedade) e mercado autorregulado (laissez-faire); liberalismo não é ideia única, varia conforme autores e contextos.\n• Trabalho: riqueza vem do trabalho (não de metais); divisão do trabalho multiplica a produtividade (fábrica de alfinetes); teoria do valor-trabalho relaciona valor à quantidade de trabalho e uso de máquinas.',
+            }
+          ], '• Q1 (ENEM 2014): d) concordar com as normas estabelecidas para a vida em sociedade.\n• Q2 (FUVEST 1998): a) contrapõe lucro à renda, pois geram racionalidades e modos de vida distintos.'),
+
+          makeLesson(11, 'Bases da Revolução Industrial', 'Pioneirismo inglês, Leis de Cercamento (Enclosure Acts), urbanização e Estado pró-mercado.', [
+            {
+              t: 'Atividade 1 — Leis de Cercamento e Revolução Industrial',
+              p: 'O que foram os Enclosure Acts e qual sua relação com a industrialização?',
+              a: '• Definição: leis do Parlamento britânico (séc. XVIII–XIX) que cercaram e privatizaram terras comunais (fim do open field system).\n• Relação: expulsaram camponeses para as cidades, gerando farta mão de obra barata e sem qualificação — o "exército industrial de reserva" (Marx) essencial às fábricas.',
+            },
+            {
+              t: 'Atividade 2 — Fatores políticos e econômicos do pioneirismo inglês',
+              p: 'O que guiava a política inglesa e como isso impulsionou a indústria?',
+              a: '• A política britânica estava alinhada ao lucro privado e ao desenvolvimento econômico: concentrou terras, investiu em infraestrutura (portos, estradas, frota mercante), expandiu o mercado consumidor urbano e permitiu que industriais influenciassem leis favoráveis aos negócios.',
+            }
+          ], '• Q1 (ENEM 2010): a) aumento do consumo interno (trabalhadores assalariados passaram a comprar no mercado).\n• Q2 (ENEM 2010): a) burguesia e trabalhadores assalariados.'),
+
+          makeLesson(12, 'Da riqueza ao vapor', 'Acumulação primitiva de capital (Williams × Hobsbawm) e transformação radical do trabalho operário.', [
+            {
+              t: 'Atividade 1 — Acumulação de capital: Eric Williams × Eric Hobsbawm',
+              p: 'Quais as diferenças entre os argumentos dos dois historiadores?',
+              a: '• Eric Williams: destaca o comércio triangular e a escravidão colonial como motor central dos lucros que financiaram a indústria britânica.\n• Eric Hobsbawm: enfatiza fatores internos — revolução agrícola (cercamentos, produtividade), mercado interno e invenções técnicas iniciais simples e baratas feitas por artesãos.',
+            },
+            {
+              t: 'Atividade 2 — Condições de vida dos trabalhadores na fábrica',
+              p: 'Como a Revolução Industrial alterou o cotidiano operário?',
+              a: '• Substituiu a autonomia artesanal pela submissão às máquinas e ao relógio fabril ("peças substituíveis"). Impôs jornadas de 12–16h, ambientes insalubres, salários baixos, trabalho infantil/feminino e perda de redes comunitárias de segurança.',
+            }
+          ], '• Q3 (ENEM 2013): b) acentuar as inovações tecnológicas (Texto I) e priorizar as mudanças no mundo do trabalho (Texto II).'),
+        ],
+      },
+
+      /* -------------------------------------------------------------------
+         2. GEOGRAFIA (Apostila 1 — 12 Aulas)
+         ------------------------------------------------------------------- */
+      {
+        id: 'geografia',
+        name: 'Geografia',
+        book: 1,
+        bookLabel: 'Apostila 1 · Humanas & Inglês',
+        subtitle: 'Sistemas Econômicos, Blocos, Mundo do Trabalho e Sustentabilidade',
+        lessons: [
+          makeLesson(1, 'Sistema econômico de mercado', 'Lei da oferta e demanda, livre concorrência, formação de preços e combate a cartéis.', [
+            {
+              t: 'Atividade 1 — Reação dos agentes em 3 situações de mercado',
+              p: 'Análise de seca no milho, novo concorrente de celulares e combinação secreta de preços (cartel).',
+              a: '• Sit. 1 (Seca no milho): oferta cai com demanda mantida → preço sobe. Ganham estoquistas/exportadores; perdem consumidores e produtores sem safra.\n• Sit. 2 (Celular 40% mais barato): livre concorrência pressiona líderes a reduzir preços e inovar, beneficiando consumidores.\n• Sit. 3 (Preços combinados): caracteriza cartel (distorção da concorrência). O Estado atua via órgãos reguladores (como o Cade) aplicando multas e proibindo acordos ilegais.',
+            }
+          ], '• Q1 (ENEM 2015): c) ação calculada e planejada para obter rentabilidade (capitalismo racional em Max Weber).'),
+
+          makeLesson(2, 'Sistema econômico planificado', 'Planejamento central estatal, propriedade pública, metas coletivas e desafios burocráticos.', [
+            {
+              t: 'Atividade 1 — Comitê de planejamento central',
+              p: 'Prioridades com recursos limitados, escassez de calçados e prós/contras do modelo.',
+              a: '• Prioridade (alimento × moradia): Estado escolhe por critério de urgência/sobrevivência, exigindo dados precisos (dificuldade do cálculo econômico).\n• Escassez de calçados: na planificada, Estado eleva metas, amplia fábricas, realoca trabalhadores ou raciona; no mercado, preço sobe e atrai novos produtores.\n• Facilidades: mobilização rápida, controle do desemprego e acesso universal. Desafios: burocracia, pouco incentivo à inovação, risco de corrupção e restrição de liberdades.',
+            }
+          ], '• Q2 (ENEM 2015): e) extinção gradual das classes sociais (princípio socialista contraposto pela polarização chinesa).'),
+
+          makeLesson(3, 'Sistema econômico misto', 'Equilíbrio entre iniciativa privada e atuação estatal (regulação, serviços públicos e redistribuição).', [
+            {
+              t: 'Atividade 1 — Classificação de setores econômicos e critérios',
+              p: 'Dividir 8 setores entre privado, público e misto e justificar critérios.',
+              a: '• Privado: produção de alimentos (com regulação sanitária) e telefonia/internet (com regulação estatal).\n• Público: segurança pública (fora da lógica de lucro) e água/esgoto (serviço essencial universal).\n• Misto: transporte público (concessões), hospitais (SUS + privados), escolas (públicas + particulares) e geração de energia.\n• Critérios: essencialidade, acesso universal, relevância estratégica, eficiência e necessidade de regulação.',
+            }
+          ], '• Q3 (UNESP 2020): e) adoção de privatizações e mínima intervenção do Estado na economia (neoliberalismo).'),
+
+          makeLesson(4, 'Blocos econômicos', 'Níveis de integração regional, empresas transnacionais e cadeias produtivas globais.', [
+            {
+              t: 'Atividade 1 — Arquitetos da integração (Novo bloco econômico)',
+              p: 'Criação de um bloco fictício com países, nome, justificativa e objetivo.',
+              a: '• Exemplo modelo:\n  1. Países: Brasil, África do Sul e Índia.\n  2. Nome: Bloco Sul Global de Desenvolvimento (BSGD).\n  3. Justificativa: economias emergentes com desafios comuns (desigualdade, infraestrutura, tecnologia) buscando maior peso comercial.\n  4. Objetivo: cooperação tecnológica e comercial reduzindo dependência dos países desenvolvidos.',
+            }
+          ], '• Q4 (FUVEST 2021): e) graves problemas ambientais no Brasil, como desmatamento e queimadas (entrave ao acordo Mercosul–UE).'),
+
+          makeLesson(5, 'Economia e mundo do trabalho', 'Globalização, offshoring, Revolução 4.0, gig economy e novas exigências de qualificação.', [
+            {
+              t: 'Atividade 1 — Análise de 3 casos no mercado de trabalho',
+              p: 'Identificar o motor da mudança e impactos positivos/negativos em cada caso.',
+              a: '• Caso 1 (Self-checkout): Automação. (+) Agilidade e menos filas / (−) Eliminação de vagas de operadores de caixa.\n• Caso 2 (Motoristas de app): Precarização / gig economy. (+) Geração de renda e flexibilidade / (−) Sem direitos trabalhistas formais.\n• Caso 3 (Indústria têxtil): Globalização / offshoring. (+) Produtos mais baratos / (−) Desemprego industrial e perda de competitividade local.',
+            }
+          ], '• Q1 (UNICAMP 2012): a) precarização das relações de trabalho para desoneração da produção e crescimento da informalidade.'),
+
+          makeLesson(6, 'Inteligência artificial e mundo do trabalho', 'IA generativa, transformação de funções, desigualdade de acesso e cadeia produtiva oculta.', [
+            {
+              t: 'Atividade 1 — Impacto da IA em dois empregos próximos',
+              p: 'Escolher dois empregos, como a IA ajuda e o risco de substituição.',
+              a: '• Exemplo 1 — Atendente de farmácia: IA ajuda no controle de estoque e dúvidas simples via chatbot. Risco: parcial (orientação humana e empatia seguem essenciais).\n• Exemplo 2 — Motorista de ônibus: IA otimiza rotas, economiza combustível e amplia segurança por sensores. Risco: no futuro sim (veículos autônomos), mas limitado no Brasil pela infraestrutura e trânsito complexo.',
+            }
+          ], '• Q2 (UNESP 2024): c) persistência de mecanismos de exploração (uberização transfere riscos/custos e elimina direitos).'),
+
+          makeLesson(7, 'Economia global e desigualdades', 'Fluxos globais (mercadorias, serviços, capitais), interdependência e contrastes entre nações.', [
+            {
+              t: 'Atividade 1 — Mapas mentais da economia global',
+              p: 'Síntese dos 3 mapas mentais propostos na aula.',
+              a: '• Fluxos globais: Mercadorias (commodities, portos, cadeias globais) · Serviços (turismo, finanças, softwares) · Capitais (investimentos, bolsas, fuga em crises).\n• Globalização e trabalho: Oportunidades (tecnologia) × Desafios (automação, informalidade, precarização) × Desigualdade salarial global.\n• Desigualdades entre países: Históricas (colonização) · Econômicas (transnacionais, concentração) · Tecnológicas (exclusão digital, dependência).',
+            }
+          ], '• Q3 (ENEM 2015): d) organização em rede e tecnologia de informação (viabilizam a produção global fragmentada).'),
+
+          makeLesson(8, 'Trabalho e emprego no mundo contemporâneo', 'Setor de serviços, Indústria 4.0 e necessidade de requalificação técnica e socioemocional.', [
+            {
+              t: 'Atividade 1 — Plano de adaptação profissional (Perfis A, B e C)',
+              p: 'Requalificação e habilidades técnicas/socioemocionais para trabalhadores impactados.',
+              a: '• Operário (autopeças): cursos de manutenção de máquinas/robôs (ex.: Pronatec); técnicas (sistemas automatizados/painéis) + socioemocionais (adaptação e aprendizagem).\n• Telemarketing: suporte especializado/marketing digital; técnicas (ferramentas digitais/redes) + socioemocionais (empatia e comunicação).\n• Bancário: consultoria financeira/fintechs; técnicas (plataformas digitais/dados) + socioemocionais (resiliência e reinvenção).',
+            }
+          ], '• Q4 (ENEM 2011): c) participação ativa das empresas e dos próprios trabalhadores no processo de qualificação laboral.'),
+
+          makeLesson(9, 'Sustentabilidade e desenvolvimento sustentável', 'Tripé da sustentabilidade (ambiental, social, econômico) e os 17 ODS da Agenda 2030.', [
+            {
+              t: 'Atividade 1 — Solução local ligada aos ODS e pilares',
+              p: 'Identificar um problema escolar/local, propor solução e relacionar a ODS e pilares.',
+              a: '• Problema exemplo: refeitório gasta 500 copos descartáveis/dia.\n• Solução: copo durável com QR code que acumula pontos trocáveis na cantina.\n• ODS relacionados: ODS 12 (Consumo e produção responsáveis) e ODS 13 (Ação contra a mudança global do clima).\n• Pilares: Ambiental (menos resíduos sólidos) e Econômico (redução de custos com descartáveis).',
+            }
+          ], '• Q1 (ENEM 2014): e) desenvolvimento social é condição para o desenvolvimento sustentável (não basta tecnologia verde sem saneamento/saúde).'),
+
+          makeLesson(10, 'Formas de produzir para o futuro', 'Agropecuária sustentável (SAF, orgânicos, fazendas verticais), economia circular, upcycling e greenwashing.', [
+            {
+              t: 'Atividade 1 — Sistema de produção sustentável em 20 anos',
+              p: 'Problemas, tecnologias, impactos e limitações nos 3 setores.',
+              a: '• Agricultura: combate desmatamento/agrotóxicos com fazendas verticais, reúso de água e energia solar → menor uso de água; desafio: alto custo e mão de obra especializada.\n• Indústria: reduz resíduos plásticos com upcycling e bioplásticos orgânicos → menos aterros e petróleo; desafio: escalar sem encarecer.\n• Comércio: combate descartáveis/exploração com comércio local rastreado → renda justa e menor pegada de carbono; desafio: competir com grandes redes.',
+            }
+          ], '• Q2 (ENEM 2023): b) utilização sustentável dos recursos naturais (sistema agroflorestal cabruca conserva a floresta nativa).'),
+
+          makeLesson(11, 'Projeto de sustentabilidade na escola', 'Diagnóstico ambiental escolar: análise de água, energia, descartáveis, resíduos e transporte.', [
+            {
+              t: 'Atividade 1 — Quadro-síntese de diagnóstico escolar',
+              p: 'Mapeamento de problemas, boas práticas e sugestões de melhoria na escola.',
+              a: '• Água: problemas (desperdício em bebedouros e descarga vazando) → melhoria (conserto de torneiras e descargas).\n• Energia: boa prática (luzes acesas apenas onde necessário).\n• Materiais descartáveis: problema (uso excessivo) → melhoria (reutilizar materiais em atividades).\n• Resíduos: boa prática (descarte separado de recicláveis e orgânicos).\n• Transporte: boa prática (uso de bicicleta por estudantes).',
+            }
+          ], '• Q3 (ENEM 2021): b) firmar parceria com a prefeitura ou cooperativa de catadores para recolhimento e destinação apropriada.'),
+
+          makeLesson(12, 'Projeto de sustentabilidade: planos de ação', 'As 5 etapas de um plano de ação realista: diagnóstico, objetivos, ações/responsáveis, recursos e avaliação.', [
+            {
+              t: 'Atividade 1 — Construção do Plano de Ação escolar',
+              p: 'Definir problemas prioritários, metas, recursos, responsáveis e manutenção do impacto.',
+              a: '• Problemas: descarte incorreto de resíduos e excesso de copos plásticos descartáveis.\n• Proposta e metas: implantar coleta seletiva + campanha para uso de garrafas/copos reutilizáveis.\n• Recursos e responsáveis: cartazes, lixeiras identificadas e apoio da gestão; executados por estudantes, professores e equipe escolar.\n• Impacto e continuidade: menos lixo incorreto e maior consciência ambiental, mantidos por monitoramento e campanhas periódicas.',
+            }
+          ], '• Q4 (UECE 2013): a) poluição diversa tornou emergente o Direito Internacional do Meio Ambiente.\n• Q5 (UFPR 2024): c) etanol é renovável, mas expansão agrícola pode gerar desmatamento.\n• Q6 (UNICAMP 2018): b) medidas propositivas; EUA rejeitam controle externo sobre poluidores.'),
+        ],
+      },
+
+      /* -------------------------------------------------------------------
+         3. LÍNGUA INGLESA (Apostila 1 — 6 Aulas: 1, 3, 5, 7, 9, 11)
+         ------------------------------------------------------------------- */
+      {
+        id: 'ingles',
+        name: 'Língua Inglesa',
+        book: 1,
+        bookLabel: 'Apostila 1 · Humanas & Inglês',
+        subtitle: 'Consumerism and Health — Inferência, Futuro, Voz Passiva e Vocabulário',
+        lessons: [
+          makeLesson(1, 'Consumerism and Health — Part 1', 'Estratégias de leitura por inferência e vocabulário sobre consumismo.', [
+            {
+              t: 'Activity 1 — Vocabulary & Inference (Consumerism)',
+              p: 'Associação de vocabulário, inferência sobre a postura do autor e definição de inferir.',
+              a: '• Q1 (Associação): (b) harm = prejudicar · (c) exploit = explorar · (a) goods = mercadorias · (d) boost = aumentar.\n• Q2 (Inferência): b) reconhece benefícios econômicos do consumismo, mas destaca suas consequências negativas como predominantes.\n• Q3 (Significado de inferir): b) concluir algo com base em indícios e associação lógica.',
+            },
+            {
+              t: 'Activity 2 — IFTO 2018 (Global Language)',
+              p: 'Melhor interpretação para o título "How English evolved into a global language".',
+              a: '• Resposta: d) A Língua Inglesa atingiu o status de língua do mundo (comparada ao papel histórico do Latim na ciência e no debate internacional).',
+            }
+          ], '• Q1 (UNICAMP 2016 — Tirinha Calvin): b) vencer o interlocutor em uma discussão ("block the other guy\'s thoughts... That\'s how you win").'),
+
+          makeLesson(3, 'Consumerism and Health — Part 2', 'Tempos futuros em inglês (will × going to) e efeitos da publicidade nos consumidores.', [
+            {
+              t: 'Activity 1 — Advertising & Future Forms',
+              p: 'Vocabulário, benefícios da publicidade, argumento principal e formas de futuro.',
+              a: '• Q1 (Associação): (d) purchases = compras · (a) provide = oferecer · (c) claims = afirmações · (b) drawbacks = desvantagens.\n• Q2 (Benefícios): fornecer detalhes que ajudam na escolha, criar fidelidade à marca e impulsionar vendas.\n• Q3 (Argumento central): d) embora útil, a publicidade deve ser regulada eticamente para equilibrar informação e manipulação.\n• Q4 (Futuro no trecho): "are going to build" (intenção/plano) e "will use" (previsão/decisão).',
+            },
+            {
+              t: 'Activity 2 — Will vs. Going to',
+              p: 'Diferença de sentido entre "We will travel..." e "We are going to travel...".',
+              a: '• Ambas traduzem-se como "Vamos viajar para a praia logo depois da aula", mas "will" indica decisão tomada na hora (não planejada), enquanto "going to" indica um plano já decidido antes.',
+            }
+          ], '• Q2 (ENEM 2024 — HQ sobre arte): d) importância de identificação com produções artísticas (personagens reproduzem a pose da obra no 4º quadrinho).'),
+
+          makeLesson(5, 'Consumerism and Health — Part 3', 'Voz passiva (be + past participle) e consumismo na indústria do bem-estar.', [
+            {
+              t: 'Activity 1 — Wellness Industry & Passive Voice',
+              p: 'Vocabulário, preocupação central do texto e análise de "Influencers are paid...".',
+              a: '• Q1 (Associação): (b) gear = equipamento · (c) misled = enganado · (a) portrayed = retratada · (d) overlooked = desprezado.\n• Q2 (Preocupação): b) o foco excessivo em produtos e tendências comerciais obscurece práticas simples e eficazes de bem-estar.\n• Q3 ("Influencers are paid"): voz passiva ("são pagos") → eles recebem pagamento, não pagam.',
+            },
+            {
+              t: 'Activity 2 — Active vs. Passive Voice',
+              p: 'Classificar 4 frases em voz ativa ou passiva.',
+              a: '• a) Active voice (People who eat healthy...)\n• b) Passive voice (...is improved by running...)\n• c) Active voice (The industry should prioritize...)\n• d) Passive voice (...are improved by yoga.)',
+            }
+          ], '• Q3 (ENEM PPL 2024 — Cartum tecnologia): d) questionar o excesso de aparatos eletrônicos (ironia entre a fala "sem tecnologia" e o quarto repleto de dispositivos).'),
+
+          makeLesson(7, 'Consumerism and Health — Part 4', 'Falsos cognatos (false friends) e impactos do consumo excessivo na saúde mental.', [
+            {
+              t: 'Activity 1 — Overconsumption & False Friends',
+              p: 'Vocabulário, intenção do texto e identificação de falsos cognatos.',
+              a: '• Q1 (Associação): (d) guilt = culpa · (a) gadgets = aparelhos · (b) boost = aumentar · (c) harm = prejudicar.\n• Q2 (Intenção): c) criticar a superficialidade da busca por aceitação e sugerir reflexão sobre valores pessoais.\n• Q3 (Falsos cognatos): "shopping" = compras (não shopping center) e "sensible" = racional/sensato (não sensível).',
+            },
+            {
+              t: 'Activity 2 — False Friends in Context',
+              p: 'Localizar e explicar outros dois falsos cognatos no texto sobre alimentação.',
+              a: '• "Preservatives" = conservantes (evitam que a comida estrague).\n• "Comprehensive" = abrangente/completo (guia completo de alimentação saudável).',
+            }
+          ], '• Q4 (FATEC 2025 — Manchete incêndio): a) "dry", pois "drought-parched" indica vegetação ressecada pela seca, alimentando o fogo.'),
+
+          makeLesson(9, 'Consumerism and Health — Part 5', 'Marcadores discursivos de opinião (In my opinion, From my perspective) e tendência skincare.', [
+            {
+              t: 'Activity 1 — Skincare Vocabulary & Listening',
+              p: 'Vocabulário de skincare e compreensão do diálogo entre Maya e Lia.',
+              a: '• Q1 (Ordem de cima p/ baixo): g (Face mask), d (Serum), f (Sunscreen), c (Skin toner), b (Skin cleanser), e (Moisturizer), a (Pouch).\n• Q2: a) She is carrying a skincare pouch with several products · b) Perfume · c) She watches many skincare videos · d) Because influencers often try to sell products in their videos.',
+            },
+            {
+              t: 'Activity 2 — "Sephora Kids" & Opinion Statements',
+              p: 'Preenchimento de lacunas e tradução de afirmações para debate.',
+              a: '• Q1 (Lacunas): teenagers · skincare · social media · influencers · simple.\n• Q2 (Traduções): a) Seguir uma rotina de cuidados com a pele é realmente necessário para jovens; b) É impossível cuidar da saúde sem gastar muito; c) Beber água, dormir bem e exercitar-se bastam; d) Muitas propagandas fazem produtos de saúde parecerem mais necessários do que são. (Agree/Disagree = pessoal).',
+            }
+          ], '• Q5 (Yale Medicine — Skincare): a) gentle cleanser, water, simple moisturizer and mineral-based sunscreen · b) skin irritation and allergic reactions · c) pore-clogging oils (coconut oil, cocoa butter, lanolin) · d) allergic reactions or sunlight sensitivity.'),
+
+          makeLesson(11, 'Consumerism and Health — Part 6', 'Vocabulário temático de alimentação (processed × ultra-processed foods) e leitura de gráficos.', [
+            {
+              t: 'Activity 1 — Food Vocabulary & Dialogue',
+              p: 'Associação de termos alimentares e julgamento T/F do diálogo.',
+              a: '• Q1 (Ordem de cima p/ baixo): c (High-protein food), a (Low-carb diet), b (Protein bar), e (Whey protein), d (Packaged food), f (Homemade food).\n• Q2 (True/False): T, F, T, F.',
+            },
+            {
+              t: 'Activity 2 — Processed vs. Ultra-processed & Word Order',
+              p: 'Classificação de alimentos e ordenação de 7 frases.',
+              a: '• Q1: Processed = frozen fruits, fresh cheese, canned fish | Ultra-processed = instant noodles, sodas, sweet snacks.\n• Q2 (Frases ordenadas): a) Some people follow a low-carb diet. · b) A protein bar is a quick snack. · c) Eggs are a high-protein food. · d) People often buy packaged food in supermarkets. · e) Athletes usually drink whey protein. · f) People try to avoid processed food. · g) Homemade food is often healthier.',
+            }
+          ], '• Q6 (Gráficos BBC — Obesidade e Ultraprocessados): T, F, F, T, F (EUA 58% e UK 57% lideram; Brasil 22% < Japão 28%).'),
+        ],
+      },
+
+      /* -------------------------------------------------------------------
+         4. FÍSICA (Apostila 2 — 12 Aulas)
+         ------------------------------------------------------------------- */
+      {
+        id: 'fisica',
+        name: 'Física',
+        book: 2,
+        bookLabel: 'Apostila 2 · Natureza',
+        subtitle: 'Leis de Kepler, Gravitação Universal, Evolução Estelar e Cosmologia',
+        lessons: [
+          makeLesson(1, 'Kepler e o movimento astronômico', 'As três Leis de Kepler (órbitas elípticas, áreas iguais e T²/R³ = k) e excentricidade.', [
+            {
+              t: 'Atividades 1, 2 e 3 — Excentricidade, 2ª e 3ª Lei de Kepler',
+              p: 'Cálculo de excentricidade (a=10, c=6), período orbital por áreas (1/8 em 38 dias) e período a 60 UA.',
+              a: '• Ativ. 1: e = c / a = 6 / 10 = 0,6 → alternativa (b).\n• Ativ. 2: 1/8 da órbita em 38 dias → T = 38 × 8 = 304 dias.\n• Ativ. 3: T² = R³·1 → T = √(60³) = √216.000 ≈ 465 anos terrestres.',
+              c: '1ª Lei: órbitas elípticas (Sol no foco); 2ª Lei: áreas iguais em tempos iguais; 3ª Lei: T²/R³ = k (no Sistema Solar em anos e UA, k = 1).',
+              s: '1. Excentricidade: divida distância focal c pelo semieixo maior a.\n2. Áreas: use regra de três direta.\n3. Período: extraia a raiz quadrada de R³.',
+              d: 'Quanto mais próximo de 0 for o valor de e (excentricidade), mais circular é a órbita.'
+            }
+          ], '• Q1 (Gravitação): T_B² / 4³ = 1² / 1³ → T_B = √64 = 8,0 anos.'),
+
+          makeLesson(2, 'Estudo das órbitas (Leis de Kepler)', 'Aplicação das Leis de Kepler em satélites, planetas anões e luas de Marte.', [
+            {
+              t: 'Atividades 1 a 5 — Exercícios de Órbitas',
+              p: 'UNICAMP (heliocentrismo), satélite a R_Lua/2, Éris (67,668 UA), Deimos e excentricidade.',
+              a: '• Ativ. 1 (UNICAMP): d) forneceram subsídios para demonstrar o modelo heliocêntrico e criticar a Igreja.\n• Ativ. 2: T_sat² = (1/8)·28² = 98 → T_sat ≈ 9,89 dias.\n• Ativ. 3 (Éris): T = √(67,668³) ≈ 556,64 anos.\n• Ativ. 4 (Deimos): T_D = √[(3·10⁴)²·24³ / 10³] ≈ 1,12·10⁵ s.\n• Ativ. 5: e = 4 / 20 = 0,2 → alternativa (d).',
+            }
+          ], '• Q2 (Satélites S1 e S2): raio orbital r = 4,19·10⁷ m; altitude h = r − R_Terra = 3,55·10⁷ m.'),
+
+          makeLesson(3, 'Newton entra em cena de novo', 'Lei da Gravitação Universal (F = G·m₁·m₂/d²), força de maré e velocidade orbital (v = √(GM/r)).', [
+            {
+              t: 'Atividades 1 a 4 — Força Gravitacional, Marés e ISS',
+              p: 'Atração Terra–Lua, Sol–Terra, influência nas marés e velocidade orbital da ISS.',
+              a: '• Ativ. 1 (Terra–Lua): F = G·M·m / d² ≈ 2,0·10²⁰ N.\n• Ativ. 2 (Sol–Terra): F ≈ 3,6·10²² N.\n• Ativ. 3 (Marés): a Lua influencia mais porque está muito mais próxima da Terra, gerando maior diferença gravitacional entre os lados do planeta (força de maré).\n• Ativ. 4 (ISS a 400 km): r = 6,771·10⁶ m → v = √(GM/r) ≈ 7.670 m/s = 7,67 km/s.',
+            }
+          ], '• Q3 (Astronauta 80 kg): a) F_Terra ≈ 785 N · b) F_Marte ≈ 298 N · c) razão F_Terra/F_Marte ≈ 2,63.'),
+
+          makeLesson(4, 'Problemas com a Gravitação Universal', 'Cálculos de força entre planetas, proporções inversas ao quadrado da distância e satélites.', [
+            {
+              t: 'Atividades 1 a 4 — Gravitação Aplicada',
+              p: 'Terra–Marte, FUVEST (Saturno/Terra), satélite 500 kg e altitude onde F = F₀/2.',
+              a: '• Ativ. 1 (Terra–Marte): F ≈ 8,5·10¹⁶ N.\n• Ativ. 2 (FUVEST — Saturno): M_S = 100 M_T e d_S = 10 d_T → 100 / 10² = 1 (razão igual a 1).\n• Ativ. 3 (Satélite 500 kg a 400 km): d = 6,77·10⁶ m → F ≈ 4,34·10³ N.\n• Ativ. 4 (F = F₀/2): (h + R)² = 2R² → h = R(√2 − 1) ≈ 0,41·6,37·10⁶ ≈ 2,61·10⁶ m.',
+            }
+          ], '• Q4 (Órbita da Terra): a) velocidade orbital média ≈ 29,8 km/s · b) período orbital ≈ 366,65 dias.'),
+
+          makeLesson(5, 'Aceleração da gravidade', 'Campo gravitacional na superfície (g = GM/R²), em altitude (GM/(R+h)²) e no interior (GMr/R³).', [
+            {
+              t: 'Atividades 1 a 4 — Gravidade na Terra, Sol e Astro Esférico',
+              p: 'g na Terra, g no Sol, peso de 75 kg e gravidade fora, na superfície e dentro de um astro.',
+              a: '• Ativ. 1 (Terra): g = 9,8 m/s².\n• Ativ. 2 (Sol): g ≈ 274 m/s².\n• Ativ. 3 (m = 75 kg): P_Terra = 735 N · P_Sol = 20.550 N.\n• Ativ. 4 (Astro R = 2·10⁶ m, M = 3·10²⁰ kg): a) a 1.000 km de altitude: 2,23·10⁻³ m/s² · b) na superfície: 5,03·10⁻³ m/s² · c) a 800 km do centro (interior): 2·10⁻³ m/s².',
+            }
+          ], '• Q5 (UNICAMP 2022 — Sonda Solar Parker): b) g = GM/r² = 6,7·10⁻¹¹·2·10³⁰ / (10¹⁰)² = 1,34 m/s².'),
+
+          makeLesson(6, 'Exercícios de campo gravitacional', 'Comparação de gravidade em exoplanetas, densidade uniforme e queda livre em órbita.', [
+            {
+              t: 'Atividades 1, 2 e 3 — Exoplanetas e Gravidade na ISS',
+              p: 'UNICAMP (R=2R_T, M=8M_T), UNESP (G581c com mesma densidade) e gravidade na ISS.',
+              a: '• Ativ. 1 (UNICAMP): g_p = (8 / 2²)·10 = 2·10 = 20 m/s² → alternativa (b).\n• Ativ. 2 (UNESP — G581c): mesma densidade e R_p = 1,5 R_T → M_p = (3/2)³ M_T → g_p = 1,5 g_0.\n• Ativ. 3 (ISS a 400 km): g ≈ 8,61 m/s² (astronautas flutuam por estarem em queda livre contínua, não por falta de gravidade).',
+            }
+          ], '• Q6 (Interior da Terra uniforme): a) a r = R/2 (3.200 km), g = 5 m/s² · b) no centro da Terra, g = 0.'),
+
+          makeLesson(7, 'Nascimento e energia das estrelas', 'Colapso gravitacional, equilíbrio hidrostático, fusão H → He e equivalência massa-energia (E = mc²).', [
+            {
+              t: 'Atividade 1 — Conversão de massa em energia (E = mc²)',
+              p: 'Calcule a energia equivalente a 1 mg (10⁻⁶ kg) em joules e em kWh.',
+              a: '• E = m·c² = 10⁻⁶ · (3·10⁸)² = 9·10¹⁰ J.\n• Convertendo para kWh (1 kWh = 3,6·10⁶ J): E = 9·10¹⁰ / 3,6·10⁶ = 2,5·10⁴ kWh (25.000 kWh).',
+            }
+          ], '• Q1 (Astronomia — 2,5 mg): E = 2,25·10¹¹ J e 62.500 kWh.'),
+
+          makeLesson(8, 'Diagrama H-R e sequência principal', 'Classificação espectral de Harvard (O, B, A, F, G, K, M), Lei de Wien e Stefan-Boltzmann.', [
+            {
+              t: 'Atividades 1 a 4 — Lei de Wien, Raio e Sirius A',
+              p: 'Temperatura solar (530 nm), dados da Estrela X, razão de raios (100L × 1L) e Sirius A (290 nm).',
+              a: '• Ativ. 1 (Sol): T = 2,9·10⁻³ / 530·10⁻⁹ ≈ 5.471,7 K.\n• Ativ. 2 (Estrela X): L ≈ 3,6·10²⁶ W · T = 5.800 K · R ≈ 6,7·10⁸ m.\n• Ativ. 3: a) R_A / R_B = √(100/1) = 10 · b) Estrela A é provavelmente uma gigante (10x maior).\n• Ativ. 4 (Sirius A): a) T = 10.000 K · b) Classe A · c) cor branca (aparente branco-azulada).',
+            }
+          ], '• Q2 (Lei de Wien — 500 nm): T = 2,9·10⁻³ / 500·10⁻⁹ = 5.800 K.'),
+
+          makeLesson(9, 'Gigantes vermelhas e anãs brancas', 'Evolução de estrelas de baixa/média massa e tempo de vida na sequência principal.', [
+            {
+              t: 'Atividades 1 e 2 — Etapas evolutivas e tempo de vida do Sol',
+              p: 'Ordenar a evolução de estrelas de baixa massa e estimar a permanência do Sol na sequência principal.',
+              a: '• Ativ. 1 (Ordem): Sequência principal → Gigante vermelha → Nebulosa planetária → Anã branca.\n• Ativ. 2 (Sol, M = M_☉): t_sp = 10¹⁰ anos (10 bilhões de anos). Como já tem ~4,6 bilhões de anos, restam pouco mais de 5 bilhões de anos nessa fase.',
+            }
+          ], '• Q3 (Estrelas como o Sol): a) o núcleo se contrai e as camadas externas se expandem (gigante vermelha) · b) o núcleo vira uma anã branca.'),
+
+          makeLesson(10, 'Estrelas massivas e supernovas', 'Fusão até o núcleo de ferro, colapso gravitacional, supernovas, estrelas de nêutrons e buracos negros.', [
+            {
+              t: 'Atividades 1 e 2 — Evolução massiva e estrela de 10 M_☉',
+              p: 'Ordenar a evolução de estrelas massivas e calcular o tempo de vida para M = 10 M_☉.',
+              a: '• Ativ. 1 (Ordem): Sequência principal → Fusão de elementos mais pesados (até o ferro) → Colapso do núcleo → Supernova → Estrela de nêutrons ou Buraco negro.\n• Ativ. 2 (10 M_☉): t_sp = 10¹⁰ / 10² = 10⁸ anos (100 milhões de anos); deve explodir em supernova deixando estrela de nêutrons.',
+            }
+          ], '• Q4 (Estrelas massivas): a) consomem combustível nuclear mais rápido · b) explosão extremamente energética após colapso do núcleo · c) estrela de nêutrons ou buraco negro.'),
+
+          makeLesson(11, 'Matéria escura e buracos negros', 'Raio de Schwarzschild (r_s = 2GM/c²), curvas de rotação galáctica e matéria escura fria (CDM).', [
+            {
+              t: 'Atividades 1 e 2 — Raio de Schwarzschild (Terra e Sagittarius A*)',
+              p: 'Calcular o raio limite para a Terra e para o buraco negro central da Via Láctea.',
+              a: '• Ativ. 1 (Terra): r_s = 2·6,67·10⁻¹¹·5,97·10²⁴ / (3·10⁸)² ≈ 8,9·10⁻³ m ≈ 9 mm.\n• Ativ. 2 (Sagittarius A*, 4·10⁶ M_☉): r_s ≈ 1,2·10¹⁰ m (cerca de 12 milhões de km).',
+            }
+          ], '• Q5 (Raio de Schwarzschild do Sol): r_s ≈ 3 km.'),
+
+          makeLesson(12, 'Big Bang e evolução do Universo', 'Relatividade Geral, expansão do espaço, Lei de Hubble (v = H₀·d), radiação cósmica e energia escura.', [
+            {
+              t: 'Atividade 1 — Lei de Hubble',
+              p: 'Velocidade de afastamento a 100 Mpc e efeito ao dobrar a distância (H₀ = 70 km/s/Mpc).',
+              a: '• a) d = 100 Mpc → v = 70 · 100 = 7.000 km/s.\n• b) Dobrando a distância para 200 Mpc, a velocidade também dobra: v = 14.000 km/s.',
+            }
+          ], '• Q6 (Lei de Hubble — v = 21.000 km/s): d = 21.000 / 70 = 300 Mpc.'),
+        ],
+      },
+
+      /* -------------------------------------------------------------------
+         5. BIOLOGIA (Apostila 2 — 12 Aulas)
+         ------------------------------------------------------------------- */
+      {
+        id: 'biologia',
+        name: 'Biologia',
+        book: 2,
+        bookLabel: 'Apostila 2 · Natureza',
+        subtitle: 'Citologia, Microbiologia, Fisiologia Comparada e Genética',
+        lessons: [
+          makeLesson(1, 'Procariontes e eucariontes', 'Características dos seres vivos e diferenças estruturais entre células procariontes e eucariontes.', [
+            {
+              t: 'Atividade 1 — Simpósio celular (Critérios de representação)',
+              p: 'O que deve constar na classificação e legenda de células procariontes e eucariontes?',
+              a: '• Procariontes (bactérias, cianobactérias, arqueias): sem carioteca (DNA disperso no citoplasma formando nucleoide), sem organelas membranosas (apenas ribossomos); podem ter plasmídeos circulares.\n• Eucariontes (animais, plantas, fungos, protozoários, algas): DNA protegido por carioteca (núcleo) e presença de organelas membranosas; sem plasmídeos.',
+            }
+          ], '• Q1 (Citologia): b) DNA disperso no citoplasma (procariontes) vs. organizado em núcleo com envoltório nuclear (eucariontes).'),
+
+          makeLesson(2, 'Transportes transmembranas', 'Membrana plasmática, transporte passivo (osmose e difusões) e transporte ativo (gasto de ATP).', [
+            {
+              t: 'Atividade 1 — Tabela comparativa dos transportes celulares',
+              p: 'Substância, gradiente de concentração, proteínas transportadoras e gasto de energia.',
+              a: '• Osmose: solvente (água) | menos → mais concentrado | proteína: sim e não (aquaporinas) | energia: NÃO.\n• Difusão simples: soluto | mais → menos concentrado | proteína: NÃO | energia: NÃO.\n• Difusão facilitada: soluto | mais → menos concentrado | proteína: SIM | energia: NÃO.\n• Transporte ativo: soluto | menos → mais concentrado (contra gradiente) | proteína: SIM | energia: SIM (ATP).',
+            }
+          ], '• Q2 (ENEM 2010 — Salinização): a) osmose (água sai das células para o solo hipertônico).\n• Q3 (ENEM 2019 — Batatas no feijão): e) difusão (sal move-se a favor do gradiente).'),
+
+          makeLesson(3, 'Bactérias', 'Morfologia (coco, bacilo, espirilo, vibrião), metabolismo em relação ao oxigênio e reprodução.', [
+            {
+              t: 'Atividade 1 — Relatório científico dos 3 tubos de ensaio',
+              p: 'Classificação das bactérias quanto à nutrição, forma e metabolismo de O₂.',
+              a: '• Nutrição: todas são heterótrofas (consomem o meio de cultura).\n• Tubo 1 (topo): cocos (arredondadas), aeróbias (precisam de O₂).\n• Tubo 2 (fundo): espirilos (espiraladas), anaeróbias obrigatórias (crescem sem O₂).\n• Tubo 3 (todo o tubo): vibriões (curvas), anaeróbias facultativas (vivem com ou sem O₂).\n• Conclusão: nutrientes e O₂ definem o crescimento; a forma só é vista ao microscópio.',
+            }
+          ], '• Q1 (ENEM 2010 — Ceratite microbiana): e) alto poder de reprodução (clones) e diversidade metabólica (aeróbico e anaeróbico).'),
+
+          makeLesson(4, 'Fungos', 'Estrutura (hifas, micélio vegetativo e reprodutivo), digestão extracelular, simbiose e penicilina.', [
+            {
+              t: 'Atividade 1 — Descoberta de Alexander Fleming (1928)',
+              p: 'Análise da placa de Petri com Staphylococcus aureus e o fungo Penicillium.',
+              a: '• a) O fungo chegou como esporo carregado pelo ar.\n• b) As bactérias ao redor do fungo foram eliminadas.\n• c) Parte visível = micélio reprodutivo; halo sem bactérias = ação do micélio vegetativo invisível dentro do meio.\n• d) Substância descoberta: antibiótico (penicilina).\n• e) Importância: permitiu tratar infecções bacterianas salvando milhões de vidas.',
+            }
+          ], '• Q2 (ENEM 2014 — Micorrizas em tomateiros): d) amplia o cultivo para regiões mais quentes.\n• Q3 (ENEM 2009 — Liquens): c) nem todos os liquens têm a mesma sensibilidade à poluição.'),
+
+          makeLesson(5, 'Aplicação dos fungos', 'Biotecnologia fúngica: alimentação, fármacos, biocombustíveis, biorremediação e biodegradação.', [
+            {
+              t: 'Atividade 1 — Tabela das 5 estações de reportagens',
+              p: 'Importância do fungo e beneficiário (humanos ou natureza) em cada estação.',
+              a: '• Est. 1 (Typcal — proteína alternativa): Produção de alimentos → Humanos.\n• Est. 2 (USP — Penicillium antártico): Produção de remédios/fotoproteção → Humanos.\n• Est. 3 (UFSCar — etanol 2ª geração): Produção de combustível → Humanos.\n• Est. 4 (CEUB — degradação de herbicidas): Descontaminar o ambiente (biorremediação) → Natureza.\n• Est. 5 (UFMG — sacolas plásticas): Despoluir resíduos plásticos (biodegradação) → Natureza.',
+            }
+          ], '• Q4 (ENEM 2019 — Abelha mandaguari): d) redução da população.\n• Q5 (ENEM 2021 — Combustíveis ambientais): b) fermentação.'),
+
+          makeLesson(6, 'Fisiologia comparada: sistema digestório', 'Digestão intra/extracelular, sistema completo/incompleto e anatomia digestória humana.', [
+            {
+              t: 'Atividades 1 e 2 — Esquema anatômico e funções dos órgãos',
+              p: 'Rotulagem do sistema digestório humano e associação de órgãos/glândulas às funções.',
+              a: '• Ativ. 1 (Órgãos): Esquerda (cima p/ baixo): Boca, Esôfago, Fígado, Intestino delgado (duodeno), Intestino delgado (jejuno e íleo), Ânus. Direita: Glândula salivar, Faringe, Estômago, Pâncreas, Intestino grosso, Reto.\n• Ativ. 2 (Ordem das letras na tabela): E (duodeno), I (ânus), C (esôfago), G (intestino grosso), J (glândulas salivares), A (boca), F (intestino delgado), K (fígado), L (pâncreas), H (reto), D (estômago), B (faringe).',
+            }
+          ], '• Q1 (FUVEST 2014): d) passa de intracelular a completamente extracelular a partir dos nematelmintos.\n• Q2 (ENEM PPL 2012 — Vesícula biliar): e) retardará a digestão de gorduras.'),
+
+          makeLesson(7, 'Fisiologia comparada: sistema circulatório', 'Circulação aberta × fechada, simples × dupla, incompleta × completa e evolução cardíaca.', [
+            {
+              t: 'Atividades 1 e 2 — Insetos, Moluscos e Peixes',
+              p: 'Questão HUMANITAS (barata × polvo) e FUVEST (molusco × peixe).',
+              a: '• Ativ. 1 (HUMANITAS): c) Aberto – fechado – baixa – alta – gases respiratórios (hemolinfa de insetos não transporta O₂/CO₂).\n• Ativ. 2 (FUVEST): a) Outros grupos com circulação fechada: anelídeos, anfíbios, répteis, aves e mamíferos.\n  b) Estruturas: A = coração · C = lacunas/hemocele · E = coração · G = brânquias · I = capilares que irrigam os tecidos.',
+            }
+          ], '• Q3 (FUVEST 2025): c) sistema fechado permite maior eficiência no transporte de oxigênio em relação ao aberto.'),
+
+          makeLesson(8, 'Fisiologia comparada: sistema respiratório', 'Trocas gasosas por difusão, brânquias, pele (cutânea), traqueias, filotraqueias e pulmões.', [
+            {
+              t: 'Atividade 1 — Comparação respiratória de 5 animais',
+              p: 'Tipo de respiração, local de troca gasosa e órgãos envolvidos.',
+              a: '• Perereca (anfíbio): pulmonar e cutânea (pele fina, úmida e vascularizada + circulação).\n• Esponja-do-mar (porífero): sem sistema respiratório; difusão direta entre células e água.\n• Abelha (inseto): traqueal (espiráculos → traqueias → traquéolas direto às células, sem sistema circulatório).\n• Salmão (peixe): branquial (filamentos das brânquias + circulação).\n• Cachorro (mamífero): pulmonar (alvéolos pulmonares + circulação).',
+            }
+          ], '• Q4 (Fisiologia comparada): d) I. traqueal, II. branquial, III. cutânea, IV. pulmonar, V. filotraqueal.'),
+
+          makeLesson(9, 'Fisiologia comparada: reprodução', 'Reprodução assexuada × sexuada, fecundação interna/externa e estratégias embrionárias.', [
+            {
+              t: 'Atividade 1 — Estudo de caso (Ameba, Cavalo-marinho e Suculentas)',
+              p: 'Classificar o tipo de reprodução e os detalhes específicos de cada organismo.',
+              a: '• Ameba: assexuada por bipartição / fissão binária / cissiparidade.\n• Cavalo-marinho: sexuada, fecundação interna (na bolsa do macho) e desenvolvimento ovovivíparo.\n• Suculentas: assexuada por propagação vegetativa (a partir de folhas).',
+            }
+          ], '• Q5 (FUVEST 2014): b) II apenas (reprodução assexuada mantém uniformidade desejada em lavoura industrial de cana).'),
+
+          makeLesson(10, 'Árvores filogenéticas', 'Leitura de cladogramas (raiz, nós, ramos terminais, ancestral comum) e evolução humana (Primatas/Hominídeos).', [
+            {
+              t: 'Atividade 1 — Análise de árvore filogenética',
+              p: 'Identificar ancestral comum, parentesco e primeira divergência.',
+              a: '• a) X representa o ancestral comum a todos.\n• b) Não — C compartilha o mesmo ancestral com A e B, mas não deu origem a elas.\n• c) Espécie E foi a primeira a se diferenciar.\n• d) A e B são mais próximos evolutivamente, pois compartilham diretamente um nó (ancestral comum exclusivo).',
+            }
+          ], '• Q1 (FATEC 2017 — Cladograma primatas): d) humanos e chimpanzés descendem de um ancestral comum exclusivo.'),
+
+          makeLesson(11, 'Sistema ABO e Fator Rh', 'Aglutinogênios nas hemácias, aglutininas no plasma, tipagem sanguínea e compatibilidade transfusional.', [
+            {
+              t: 'Atividade 1 — Tipagem sanguínea e transfusões',
+              p: 'Identificar as 4 amostras, preencher tabela de transfusão e indicar doador universal.',
+              a: '• Q1 (Amostras): I = tipo B · II = tipo AB · III = tipo O · IV = tipo A.\n• Q2 (Transfusões): O recebe de O / doa p/ O, A, B, AB · A recebe de A, O / doa p/ A, AB · B recebe de B, O / doa p/ B, AB · AB recebe de todos / doa p/ AB.\n• Q3: Tipo O é o doador universal (mais especificamente O− considerando o fator Rh).',
+            }
+          ], '• Q2 (FCMSCSP 2021): b) Pablo é tipo B e apresenta aglutinina anti-A.\n• Q3 (ENEM 2017 — Soro anti-Rh): b) destruir as células sanguíneas do bebê presentes no sangue da mãe.'),
+
+          makeLesson(12, 'Leis de Mendel', '1ª Lei (segregação dos alelos), 2ª Lei (segregação independente), codominância e polialelia.', [
+            {
+              t: 'Atividade 1 — Cruzamento di-híbrido (ABO + Rh)',
+              p: 'Mãe A heterozigota Rh− (I^A i rr) × Pai B heterozigoto Rh+ heterozigoto (I^B i Rr).',
+              a: '• Segregação ABO: I^A I^B (AB), I^A i (A), I^B i (B), ii (O).\n• Segregação Rh: Rr (Rh+) e rr (Rh−).\n• Combinações possíveis para os filhos: todos os 8 tipos sanguíneos — AB+, AB−, A+, A−, B+, B−, O+ e O−.',
+            }
+          ], '• Q4 (ENEM 2016): a) pai e mãe heterozigotos para ABO e Rh.\n• Q5 (ENEM 2014): a) genótipo I^A I^A exclui a paternidade de filho tipo B.'),
+        ],
+      },
+
+      /* -------------------------------------------------------------------
+         6. QUÍMICA (Apostila 2 — 12 Aulas)
+         ------------------------------------------------------------------- */
+      {
+        id: 'quimica',
+        name: 'Química',
+        book: 2,
+        bookLabel: 'Apostila 2 · Natureza',
+        subtitle: 'Funções Inorgânicas, Ciclos Biogeoquímicos, Soluções e Química Ambiental',
+        lessons: [
+          makeLesson(1, 'Funções inorgânicas e ciclos biogeoquímicos', 'Ácidos, bases, sais e óxidos nos ciclos do carbono, nitrogênio e água.', [
+            {
+              t: 'Atividade 1 — 3 Casos Ambientais (Chuva Ácida, Oceanos e Eutrofização)',
+              p: 'Classificação dos compostos, ciclos afetados, impactos e soluções.',
+              a: '• Caso 1 (Chuva ácida): SO₂ e NO₂ (óxidos) → H₂SO₄ e HNO₃ (ácidos) afetando ciclos da água e nitrogênio → redução de pH/corrosão; solução: controle de emissões e catalisadores.\n• Caso 2 (Oceanos): CO₂ (óxido) → H₂CO₃ (ácido) afeta CaCO₃ (sal) no ciclo do carbono → acidificação e dano a corais/conchas; solução: reduzir emissões de CO₂.\n• Caso 3 (Fertilizantes): NH₄NO₃ e KNO₃ (sais) nos ciclos do nitrogênio e água → eutrofização; solução: manejo racional de fertilizantes.',
+            }
+          ], '• Q1 (ENEM PPL 2024): c) proliferação de grandes quantidades de algas nos cursos d\'água (eutrofização).'),
+
+          makeLesson(2, 'Ciclos do fósforo e do enxofre', 'Dinâmica sedimentar do fósforo (DNA/ATP) e atmosférica do enxofre (chuva ácida).', [
+            {
+              t: 'Atividades 1, 2 e 3 — Questões ENEM sobre Enxofre e Fósforo',
+              p: 'Ciclo natural do enxofre, impactos das emissões de SOx e sustentabilidade do fósforo.',
+              a: '• Ativ. 1 (ENEM 2001): e) II, III e IV corretas (no ciclo natural sem ação humana, não há poluição).\n• Ativ. 2 (ENEM 2023): c) aparecimento de chuva ácida (SO₂ e SO₃ formam H₂SO₄/H₂SO₃).\n• Ativ. 3 (ENEM 2010): a) incentivar reciclagem de resíduos biológicos (dejetos e restos de culturas) como adubo.',
+            }
+          ], '• Q2 (UDESC 2017 — Ciclo do fósforo): e) todas as afirmativas (I, II, III e IV) são verdadeiras.'),
+
+          makeLesson(3, 'Ciclos biogeoquímicos e pH', 'Escala de pH (0–14) e interferência da acidez em oceanos, solos e corpos d\'água.', [
+            {
+              t: 'Atividades 1, 2 e 3 — FUVEST e ENEM (pH Ambiental)',
+              p: 'Acidificação de corais, solo ácido no ciclo do nitrogênio e fertirrigação com vinhaça.',
+              a: '• Ativ. 1 (FUVEST 2019): e) CO₂ reage com água produzindo ácido carbônico, que corrói recifes de CaCO₃.\n• Ativ. 2 (ENEM 2022): c) NH₄⁺ (em solo ácido com excesso de H⁺, NH₃ vira NH₄⁺ e nitrificação cai).\n• Ativ. 3 (ENEM 2013): d) diminui eutrofização de lagos e represas.',
+            }
+          ], '• Q3 (ENEM 2014 — Corais): e) dano à estrutura dos esqueletos calcários, diminuindo o tamanho das populações.'),
+
+          makeLesson(4, 'Poluição e poluentes', 'Poluentes químicos, físicos e biológicos, smog fotoquímico, efeito estufa e mitigação.', [
+            {
+              t: 'Atividade 1 — Estudo de caso: Cidade de Rio Verde',
+              p: 'Identificar fenômenos, poluentes, causas humanas, ciclos afetados e soluções.',
+              a: '• Fenômenos: eutrofização (espuma/algas), poluição do ar/smog, chuva ácida (folhas queimadas) e erosão do solo.\n• Poluentes: NOx, SO₂, CO, particulados no ar; excesso de N e P na água.\n• Causas: indústrias, agricultura intensiva, combustíveis fósseis e esgoto sem tratamento.\n• Ações: filtros industriais, manejo agrícola, tratamento de esgoto, transporte limpo, reflorestamento e educação ambiental.',
+            }
+          ], '• Q4 (ENEM PPL 2017 — SO₂ → SO₃ → H₂SO₄): a) formação de chuva ácida.'),
+
+          makeLesson(5, 'Chuva ácida', 'Precipitação com pH < 5,6, indicador natural de repolho roxo e neutralização.', [
+            {
+              t: 'Atividades 1 e 2 — Indicador de repolho roxo e Neutralização',
+              p: 'Classificação ácido/neutro/base, reação vinagre + bicarbonato, HCl + NaOH e mitigação.',
+              a: '• Ativ. 1: Água (roxo/neutro) · Vinagre, HCl e Refrigerante (vermelho/ácido) · Bicarbonato (verde-azulado/base) · Sabão em pó e Soda cáustica (verde/base).\n• Ativ. 2: 1) Vinagre + NaHCO₃ muda de vermelho para azulado (pH sobe) liberando CO₂. 2) HCl + NaOH → NaCl + H₂O (muda de vermelho → roxo → verde/azul). 3) Bases neutralizam acidez em solos/lagos e tratam gases SO₂/NOx antes de irem à atmosfera.',
+            }
+          ], '• Q5 (ENEM 2011): a) corrosão de metais, pinturas, monumentos, destruição vegetal e acidificação de lagos.'),
+
+          makeLesson(6, 'Reações de neutralização', 'Ácido + Base → Sal + Água; força de ácidos/bases e caráter neutro, ácido ou básico dos sais.', [
+            {
+              t: 'Atividades 1 e 2 — Experimento de neutralização e pH de sais',
+              p: 'Equações balanceadas dos 4 testes experimentais e questão UNIOESTE.',
+              a: '• Ativ. 1 (Equações e sais): 2CH₃COOH + Mg(OH)₂ → Mg(CH₃COO)₂ + 2H₂O (neutro) · CH₃COOH + NaOH → CH₃COONa + H₂O (básico) · 2C₆H₈O₇ + 3Mg(OH)₂ → Mg₃(C₆H₅O₇)₂ + 6H₂O (neutro/levemente básico) · C₆H₈O₇ + 3NaOH → Na₃C₆H₅O₇ + 3H₂O (básico).\n• Ativ. 2 (UNIOESTE 2015): d) NaCl (pH = 7, proveniente de HCl forte + NaOH forte).',
+            }
+          ], '• Q6 (UNESP 2009 — Antiácidos): d) diminuírem a concentração de H₃O⁺ presente no suco gástrico.'),
+
+          makeLesson(7, 'Poluentes, nitratos e nitritos na água', 'Dissociação de sais nitrogenados, eutrofização, limites CONAMA 357/2005 e controle.', [
+            {
+              t: 'Atividades 1 a 4 — ITA, ENEM, FUVEST e Análise de 4 Rios',
+              p: 'Dissociação de KNO₃, impactos de nitratos/nitritos e comparação com limites CONAMA.',
+              a: '• Ativ. 1 (ITA): c) KNO₃(s) → K⁺(aq) + NO₃⁻(aq).\n• Ativ. 2 (ENEM): c) contaminação pela alta solubilidade de NO₃⁻ e NH₄⁺.\n• Ativ. 3 (FUVEST): e) diminuição de O₂ pela decomposição das algas.\n• Ativ. 4 (CONAMA: nitrato ≤ 10 mg/L; nitrito ≤ 1 mg/L): Rios A e C dentro do limite; Rio B (nitrato 12 acima) e Rio D (nitrato 15 e nitrito 1,5 acima). Soluções: adubação controlada, matas ciliares e tratamento de esgoto.',
+            }
+          ], '• Q7 (ENEM 2023 — Reator de esgoto): e) utilizar O₂ para transformar amônia (NH₃) em nitrito e, após, em nitrato (nitrificação).'),
+
+          makeLesson(8, 'Solubilidade de compostos iônicos', 'Dissociação iônica, proporção de cargas na fórmula de sais e precipitação fracionada.', [
+            {
+              t: 'Atividades 1 a 4 — Nomenclatura, MgCl₂, PhET e Precipitação',
+              p: 'ETEC (CaS), dissociação de MgCl₂, fórmulas de sais e ENEM (água do mar).',
+              a: '• Ativ. 1 (ETEC): a) CaS (sulfeto de cálcio).\n• Ativ. 2: MgCl₂ dissocia-se em 1 Mg²⁺ e 2 Cl⁻ separados na água (proporção 1:2).\n• Ativ. 3 (PhET): NaCl (Na⁺/Cl⁻, 1:1); sais pouco solúveis: Tl₂S, HgBr₂, Ag₃AsO₄, CuI, Sr₃(PO₄)₂, AgBr; tabela geral: CA, C₂A, C₃A / CA₂, CA, C₃A₂ / CA₃, C₂A₃, CA.\n• Ativ. 4 (ENEM): a) precipitam do menos ao mais solúvel: CaCO₃, CaSO₄, NaCl/MgSO₄, MgCl₂ e NaBr.',
+            }
+          ], '• Q1 (ENEM 2014 — Propriedades do NaCl): b) substância II (altos PF/PE, solúvel em água, conduz em solução e não no sólido).'),
+
+          makeLesson(9, 'Soluções químicas', 'Soluto, solvente, coeficiente de solubilidade, soluções insaturadas/saturadas e corpo de fundo.', [
+            {
+              t: 'Atividades 1 e 2 — Solubilidade e Ciclos Biogeoquímicos',
+              p: 'FICSAE (4 tubos com K₂Cr₂O₇) e papel das soluções na natureza.',
+              a: '• Ativ. 1 (FICSAE): solubilidade = 12,5 g/100 mL → máximo em 20 mL é 2,5 g. Tubo 1 (1 g) insaturado; Tubos 2 (3 g), 3 (5 g) e 4 (7 g) têm corpo de fundo → alternativa (c).\n• Ativ. 2: d) transportam e transformam substâncias nos ciclos biogeoquímicos.',
+            }
+          ], '• Q2 (UCS 2016 — Curva de solubilidade): d) a dissolução do iodeto de sódio (NaI) é endotérmica (solubilidade sobe com a temperatura).'),
+
+          makeLesson(10, 'Concentração de soluções', 'Concentração comum (g/L), molaridade (mol/L), ppm, % m/V e diluição.', [
+            {
+              t: 'Atividades 1, 2 e 3 — Experimento, ENEM (sacarose) e UECE (CO₂)',
+              p: 'Cálculo de concentração em g/L, diluição e molaridade.',
+              a: '• Ativ. 1 (Experimento): solvente = água, soluto = suco em pó; 3 g em 100 mL = 30 g/L; após diluição (2 gotas = 0,1 mL em 100 mL) = 0,03 g/L (béquer 1 é 1.000× mais concentrado).\n• Ativ. 2 (ENEM — cafezinho): 3,42 g / 342 = 0,01 mol em 0,05 L → M = 0,2 mol/L (b).\n• Ativ. 3 (UECE): n = 80 · 0,0625 = 5 mol → m = 5 · 44 = 220 g (a).',
+            }
+          ], '• Q3 (Albert Einstein 2025 — Whey protein): e) 3 · 7,5 g = 22,5 g em 0,25 L → C = 90,0 g/L.'),
+
+          makeLesson(11, 'Qualidade da água e do ar', 'Parâmetros físico-químicos/microbiológicos da água e poluentes atmosféricos monitorados.', [
+            {
+              t: 'Atividade 1 — Diagnóstico de Qualidade da Água e do Ar',
+              p: 'Análise das tabelas do Grupo A (Rio Bela Vista) e Grupo B (Cidade litorânea).',
+              a: '• Grupo A (Água): IMPRÓPRIA — pH 5,5 (baixo), turbidez 10 (alta), O₂ 3 mg/L (baixo), nitrato 15 mg/L (alto) e coliformes presentes → risco de diarreia, cólera, hepatite A e síndrome do bebê azul; exige tratamento, esgoto e monitoramento.\n• Grupo B (Ar): RUIM — MP10, O₃, CO, NO₂ e SO₂ todos acima do ideal → irritações, tosse e agravamento de asma/bronquite; requer transporte público, controle industrial e áreas verdes.',
+            }
+          ], '• Q4 (ENEM 2016 — Cana/Etanol): c) há transformação química quando palha da cana e etanol são queimados como fonte de energia.'),
+
+          makeLesson(12, 'Tratamento de água e esgoto', 'Segurança hídrica, cálculos de molaridade, plano 5W2H e etapas de uma ETA.', [
+            {
+              t: 'Atividades 1 e 2 — Tabela de Molaridade e Plano 5W2H',
+              p: 'Completar cálculos molares de 4 soluções e elaborar plano 5W2H comunitário.',
+              a: '• Ativ. 1 (Tabela):\n  - KMnO₄ (158 g/mol): 0,4 mol → 63,2 g em 1,0 L = 0,400 mol/L; 0,2 mol → 31,6 g em 0,5 L = 0,400 mol/L.\n  - K₂CrO₄ (194 g/mol): 0,5 mol → 97 g em 0,5 L = 1,0 mol/L.\n  - CuSO₄ (159,5 g/mol): 0,1 mol → 15,95 g em 0,8 L = 0,125 mol/L.\n• Ativ. 2 (5W2H): O quê (melhorar água/limpeza), Por quê (evitar doenças), Onde (rios/bairros), Quando (cronograma mensal), Quem (moradores/escolas/prefeitura), Como (campanhas/filtros/fossas), Quanto (orçamento e materiais).',
+            }
+          ], '• Q1 (ENEM 2022 — ETA): b) Decantação (flocos depositam-se no fundo por gravidade, removendo maior parte dos sólidos).'),
+        ],
+      },
+
+      /* -------------------------------------------------------------------
+         7. LÍNGUA PORTUGUESA (Apostila 3 — 24 Aulas)
+         ------------------------------------------------------------------- */
+      {
+        id: 'portugues',
+        name: 'Língua Portuguesa',
+        book: 3,
+        bookLabel: 'Apostila 3 · Linguagens & Matemática',
+        subtitle: 'Quinhentismo, Barroco, Gêneros Argumentativos, Narrativos e Gramática',
+        lessons: [
+          makeLesson(1, 'José de Anchieta — Parte 1', 'Quinhentismo, literatura de catequese, gênero auto e estratégia de aculturação.', [
+            { t: 'Atividades 1 e 2 — Auto de São Lourenço', p: 'Nomes das personagens e função aculturadora do teatro jesuítico.', a: '• Ativ. 1: Demônios recebem nomes indígenas (Guaixará, Aimbirê) e heróis recebem nomes cristãos (santos/anjos), associando a cultura nativa ao "mal" e a europeia ao "bem".\n• Ativ. 2: 1) O teatro era "escola de costumes" (premiava a fé cristã e punia práticas nativas). 2) Não havia respeito igualitário: elementos indígenas eram assimilados apenas para substituir sua fé pela católica.' }
+          ], '• Q1 (UNIMONTES): d) incorreta — não visava conciliação religiosa, mas catequização/aculturação.\n• Q2 (UFT): a) diálogo em que São Lourenço intercede pelos índios.'),
+
+          makeLesson(2, 'José de Anchieta — Parte 2', 'Efeitos de sentido do pretérito perfeito (ação pontual) e imperfeito (hábito duradouro).', [
+            { t: 'Atividades 1 e 2 — Tempos verbais no Auto', p: 'Identificação dos pretéritos na estrofe de Aimbirê e associação.', a: '• Ativ. 1: Imperfeito = "morava", "afastava" (estado antigo/habitual); Perfeito = "entregaram" (momento decisivo da conversão).\n• Ativ. 2 (Associação): (2) afastava · (1) tranquilizei-me · (1) bebemos · (2) dançavam.' }
+          ], '• Q1 (CECIERJ): a) ação desenvolvida / concluída / anterior a outra passada.\n• Q2 (UFRN): d) imperfeito e presente constroem imagens contrastantes do trapiche.'),
+
+          makeLesson(3, 'Barroco: Gregório de Matos — Parte 1', 'Estética da tensão, chiaroscuro, sátira social, poesia sacra e conceptismo.', [
+            { t: 'Atividades 1 e 2 — Sátira e Soneto Sagrado', p: 'Características barrocas nos versos e estratégia lógica do soneto.', a: '• Ativ. 1: alternativas (b) apelo emocional e (c) foco no sofrimento/drama.\n• Ativ. 2: Estratégia conceptista — quanto maior o pecado do homem, maior a oportunidade de Deus exercer sua clemência e glória ao perdoar.' }
+          ], '• Q1 (UNESP): a) representa satiricamente governantes e desonestidade na Bahia.\n• Q2 (UFJF): e) consciência da fugacidade do tempo.'),
+
+          makeLesson(4, 'Barroco: Gregório de Matos — Parte 2', 'Concordância nominal: regra geral, múltiplos substantivos e casos especiais (bastante, meio, anexo).', [
+            { t: 'Atividades 1 e 2 — Concordância nominal na prática', p: 'Uso de "bastantes" em Gregório de Matos e preenchimento de lacunas.', a: '• Ativ. 1: a) "bastantes" concorda com "os" (governantes); b) enfatiza que há governantes em excesso apenas para causar dano.\n• Ativ. 2 (Lacunas): mortos · própria · inclusas · meio (advérbio invariável).' }
+          ], '• Q1 (IF Sul): a) Uma palavra (apenas o verbo "paguei" → "pagamos").\n• Q2 (UNICEUB): a) argumento – anexas – meio – simpáticas.'),
+
+          makeLesson(5, 'Barroco: Padre Antônio Vieira — Parte 1', 'Conceptismo argumentativo e crítica social no "Sermão de Santo Antônio aos Peixes".', [
+            { t: 'Atividades 1 e 2 — Metáfora dos peixes e do pão quotidiano', p: 'Crítica social, gradação verbal e uso da linguagem religiosa.', a: '• Ativ. 1: a) denuncia exploração dos mais fracos pelos poderosos; b) "grandes" = elite/governantes, "pequenos" = pobres/escravizados.\n• Ativ. 2: a) "pão quotidiano" = exploração diária e contínua; b) gradação "comam, traguem, devorem" intensifica a voracidade; c) linguagem religiosa condena moralmente a injustiça social.' }
+          ], '• Q1 (UNESP): c) antíteses reconhecendo a escravização como caminho possível da missão.\n• Q2 (CESMAC): a) 1, 2, 3 e 4 corretas.'),
+
+          makeLesson(6, 'Barroco: Padre Antônio Vieira — Parte 2', 'Engenharia discursiva conceptista e regras de concordância verbal.', [
+            { t: 'Atividades 1 e 2 — Concordância verbal', p: 'Sujeito composto posposto e identificação de concordância adequada.', a: '• Ativ. 1: "Nascerão na alma o fruto e a esperança" (lógica/plural) ou "Nascerá na alma o fruto e a esperança" (atrativa/núcleo mais próximo).\n• Ativ. 2: b) "Ler, escrever e pregar era a rotina de Vieira" (sujeito formado por infinitivos admite singular).' }
+          ], '• Q1 (CEDERJ): b) "observaram" concorda com "pesquisadores do grupo Mave".\n• Q2 (FASEH): c) concordância facultativa (singular ou plural com "a maior parte delas").'),
+
+          makeLesson(7, 'Expressões do Barroco em Portugal', 'Chiaroscuro, hipérboles, antíteses, efemeridade, carpe diem e memento mori.', [
+            { t: 'Atividades 1 e 2 — Mariana Alcoforado e Gregório de Matos', p: 'Exageros/contrastes barrocos e conselho ligado à efemeridade.', a: '• Ativ. 1: Hipérbole ("amo mil vezes mais que à minha vida") e antítese ("prazer" vs. "sofrimento").\n• Ativ. 2: Conselho de carpe diem ("goza da flor da mocidade") justificado pela rapidez do tempo que converte tudo em "terra, cinza, pó, nada".' }
+          ], '• Q1 (ENEM 2022): a) resposta às contestações aos domínios do papado (Contrarreforma).\n• Q2 (UNICENTRO): d) transitoriedade / enumeração de ideias.'),
+
+          makeLesson(8, 'Barroco e contemporaneidade', 'Ecos barrocos na poesia moderna (Lêdo Ivo, Leminski) e figuras de linguagem.', [
+            { t: 'Atividades 1 e 2 — Poema de Lêdo Ivo e criação barroca', p: 'Comparação, choque sensorial e sátira social no poema.', a: '• Ativ. 1: 1) "Alteiam os pescoços como gansos" animaliza os pobres; 2) cores vibrantes e odores criam choque barroco entre elite e subúrbio; 3) é sátira usando a voz do preconceituoso para expor o ridículo.\n• Ativ. 2: Produção pessoal com 1 verso de hipérbole e 1 verso de hipérbato.' }
+          ], '• Q3 (CESMAC — Machado): a) Barroco (antíteses e dualismo vida/morte).\n• Q4 (UPE — Moda): c) 2 e 3 apenas (excesso de detalhes e mistura de informações).'),
+
+          makeLesson(9, 'Editorial — Parte 1', 'Gênero opinativo institucional sem assinatura, tese e argumentos de prova concreta.', [
+            { t: 'Atividades 1 e 2 — Editorial sobre obesidade (O Tempo)', p: 'Tese, função dos dados Vigitel, responsabilidade e verba de R$ 340 milhões.', a: '• Ativ. 1: a) Tese: obesidade é crise urgente de saúde pública, não estética; b) Vigitel = prova concreta/autoridade; c) responsabilidade compartilhada ("política regular de Estado" e "cuidado diário de cada brasileiro").\n• Ativ. 2: b) validar a gravidade e magnitude do cenário epidemiológico.' }
+          ], '• Q1 (ENEM 2014): d) interpretar criticamente fatos relevantes para a opinião pública.\n• Q2 (VUNESP 2018): d) discutir perigos do álcool/drogas com base em estudo da USP.'),
+
+          makeLesson(10, 'Editorial — Parte 2 (Coesão textual)', 'Coesão referencial (anáfora, catáfora, elipse) e sequencial (conectores lógicos).', [
+            { t: 'Atividades 1 e 2 — Editorial sobre Fake News', p: 'Pronome "lhes", conjunção adversativa, imperativos e "assim como".', a: '• Ativ. 1: a) "lhes" retoma "deseducados" e "educados"; b) "mas" contrapõe falta de leitura à conveniência política; c) imperativos ("pesquise", "informe-se") convocam ação prática do leitor.\n• Ativ. 2: a) equivalência entre processos paralelos no tempo ("assim como").' }
+          ], '• Q1 (FUVEST 2021): c) efeito cascata, mercado editorial, crise, queda de vendas.\n• Q2 (ENEM 2021): e) "[...] não ficar brigando com ele" (retoma "nome").'),
+
+          makeLesson(11, 'Editorial — Parte 3 (Modalizadores)', 'Assunto × tema, verbos opinativos e modalizadores de certeza, dúvida, compromisso e refutação.', [
+            { t: 'Atividades 1 e 2 — Editorial sobre violência urbana', p: 'Comparação entre "precisa" e "talvez" e produção de parágrafo.', a: '• Ativ. 1: "precisa" indica necessidade e cobrança política firme junto ao Estado; "talvez" introduz dúvida/suposição e enfraquece a força argumentativa do editorial.\n• Ativ. 2: Produção pessoal sobre câmeras na escola usando modalizador de certeza ("sem dúvida") e de refutação ("apesar de").' }
+          ], '• Q3 (ENEM 2017): a) relato pessoal que especifica o debate.\n• Q4 (UNESP 2019): e) progresso anterior inviabiliza aceitar recuo na preservação.'),
+
+          makeLesson(12, 'Editorial — Parte 4 (Operadores)', 'Operadores de causa/efeito, autoridade, contraposição, comparação e exemplificação.', [
+            { t: 'Atividades 1, 2 e 3 — Editorial sobre IA nas eleições (O Globo)', p: 'Causa/efeito, modalizador "discutível" e associação de estratégias.', a: '• Ativ. 1: a) facilidade de acesso à IA (causa) torna o eleitor presa fácil (efeito).\n• Ativ. 2: b) "discutível" expressa incerteza/ceticismo sobre a eficácia da regra.\n• Ativ. 3 (Associação): (b) Exemplificação · (c) Autoridade · (a) Contraposição.' }
+          ], '• Q1 (ENEM 2023 — "Aliás"): c) acréscimo de fato comprobatório.\n• Q2 (ENEM 2021 — Lixões): c) enumeração de atividades cotidianas.'),
+
+          makeLesson(13, 'Manifesto — Parte 1', 'Gênero de exposição pública e mobilização coletiva (1ª pessoa do plural, verbos de força).', [
+            { t: 'Atividades 1 e 2 — Manifesto Jovem #ENDviolence (ONU)', p: 'Recursos persuasivos, enumeração identitária, hashtags e estrutura.', a: '• Ativ. 1: a) "urgência" cria pressão temporal e "sem atribuir o fardo" retira culpa da criança; b) enumeração dá visibilidade a grupos marginalizados; c) hashtags revelam público jovem conectado.\n• Ativ. 2 (Ordem): (b) Compromisso coletivo · (a) Princípio · (c) Reivindicação.' }
+          ], '• Q1 (FUNDEP 2024): a) representar a voz coletiva dos povos indígenas.\n• Q2 (UNICAMP 2025 — "mil-lheres"): c) pluralidade identitária.'),
+
+          makeLesson(14, 'Manifesto — Parte 2 (Adequação vocabular)', 'Escolha lexical estratégica, rejeição à neutralidade e força política das palavras.', [
+            { t: 'Atividade 1 — Manifesto das crianças indígenas', p: 'Sentido de "ancestrais", "autoridade climática" e "resistência" + planejamento.', a: '• a) "Ancestrais" remete a saberes milenares, legitimando a fala das crianças.\n• b) "Autoridade climática" inverte a lógica comum, afirmando que quem vive na floresta domina o tema.\n• c) Trocar "resistência" por "teimosia/persistência" enfraquece o peso político de luta histórica.\n• Q2: Planejamento em grupo (produção pessoal).' }
+          ], '• Q1 (IFF-TO — "imobilizar"): a) escolha intencional/expressiva (trocadilho com UFC).\n• Q2 (CESMAC — Diabetes): c) 1, 3 e 4 corretas ("mirabolantes" ≠ "irreversíveis").'),
+
+          makeLesson(15, 'Críticas da mídia — Parte 1', 'Resenha crítica: resumo objetivo sem spoilers, critérios técnicos e avaliação fundamentada.', [
+            { t: 'Atividade 1 — Resenha crítica de Enola Holmes', p: 'Estética visual, contraste Mycroft × Enola e argumento final.', a: '• a) Fotografia com cores claras e vibrantes retira o "peso" sombrio típico dos filmes de Sherlock Holmes.\n• b) Mycroft encarna o discurso machista (caricato/desprezível); Enola e a mãe representam força e emancipação feminina.\n• c) Mesmo não sendo inovador, recomenda pelo carisma de Millie Bobby Brown e diversão.' }
+          ], '• Q1 (PUC-PR): c) Resenha (descrição resumida + valoração crítica).\n• Q2 (ENEM 2024 — Game of Thrones): b) expressões adversativas ("mas") fazem ressalvas aos elogios.'),
+
+          makeLesson(16, 'Críticas da mídia — Parte 2 (Locução adverbial)', 'Advérbios e locuções adverbiais de modo, tempo, intensidade e afirmação na resenha.', [
+            { t: 'Atividades 1 e 2 — Review de FIFA 23', p: 'Fator nostalgia, jogabilidade cadenciada e valor das locuções adverbiais.', a: '• Ativ. 1: 1) A nostalgia (último título EA/FIFA) o mantém entre os melhores; 2) "mais cadenciado" = menos correria, foco em toque de bola e estratégia.\n• Ativ. 2: 1) "com chave de ouro" = locução adverbial de modo (avaliação excelente); 2) "sem dúvida alguma" = afirmação/certeza absoluta dando segurança ao comprador.' }
+          ], '• Q1 (FGV 2024): c) sem dúvida = indubitavelmente.\n• Q2 (FGV 2022): d) pouco a pouco = paulatinamente.'),
+
+          makeLesson(17, 'Divulgação científica — Parte 1', 'Democratização da ciência: linguagem acessível, metáforas cotidianas e fontes de autoridade.', [
+            { t: 'Atividade 1 — "Afinal, o tempo existe?" (Revista Galileu)', p: 'Função das metáforas, exemplo do GPS e papel da entropia.', a: '• a) "Mingau grosso" e "sorvete derretendo" traduzem percepção abstrata do tempo em imagens sensoriais didáticas.\n• b) O GPS prova que a relatividade de Einstein impacta o cotidiano prático.\n• c) A entropia (tendência estatística à maior desordem) determina a seta/irreversibilidade do tempo.' }
+          ], '• Q1 (ENEM 2016): d) trata de descobertas da ciência com linguagem acessível ao público geral.\n• Q2 (ENEM 2018 — "Mais big do que bang"): c) expansão substitui ideia de explosão.'),
+
+          makeLesson(18, 'Divulgação científica — Parte 2 (Coerência)', 'Princípios da coerência textual: não contradição, não tautologia e relevância.', [
+            { t: 'Atividades 1 e 2 — Ciúmes entre babuínos (Superinteressante)', p: 'Coerência temática (ponte inicial) e princípio da não contradição.', a: '• Ativ. 1: Começar falando de ciúmes entre irmãos humanos cria analogia que engaja o leitor sem ferir a relevância, pois o texto compara as duas espécies.\n• Ativ. 2: Admitir dúvidas no final não contradiz o título, pois há modalizadores de hipótese ("sugerem", "parece ser"), coerentes com o método científico.' }
+          ], '• Q1 (ENEM 2019 — Slow food): b) "agora" sinaliza mudança de foco temático.\n• Q2 (UNIFACIG): c) coesão anafórica ("essa questão") entre 2º e 3º parágrafos.'),
+
+          makeLesson(19, 'Conto fantástico', 'Verossimilhança inicial, ruptura pelo insólito, hesitação e simbolismo.', [
+            { t: 'Atividades 1 e 2 — "O coração do menino e o menino do coração" (Mia Couto)', p: 'Subversão da previsão da avó, ligação cartas/coração e função do desfecho.', a: '• Ativ. 1: a) Pés "divergentes" subvertem o isolamento ("caminhar para dentro"), indicando abertura para o mundo; b) a leitura dos versos por Marlisa provoca o parto mágico do coração (arte humaniza o que a ciência rotulava).\n• Ativ. 2: b) subversão da realidade em que a sensibilidade poética ganha vida, superando os rótulos de "tonto/anormal".' }
+          ], '• Q1 (UECE — Murilo Rubião): d) "Não parasse ele..." trata da logística da ação, não do cenário fantástico.\n• Q2: a) apenas I correta (narrador-personagem em 1ª pessoa).'),
+
+          makeLesson(20, 'Microconto — Parte 1', 'Concisão radical, estética da sugestão (elipses), leitor coautor e virada (punchline).', [
+            { t: 'Atividades 1 e 2 — Dalton Trevisan e Leonardo Sakamoto', p: 'Inferência de elipses e leitura de metáfora/elemento fantástico.', a: '• Ativ. 1 (Trevisan): a) o espanto ("você conhece meu pai!") revela ruptura total após o divórcio; b) a brevidade potencializa o choque imediato do desfecho.\n• Ativ. 2 (Sakamoto): a) "coração desabou" = metáfora para a morte súbita do avô; b) o arco-íris criado pelo céu acolhe a dor do neto e homenageia o avô.' }
+          ], '• Q1 (UFT 2018): c) estilo marcante com linguagem concisa e elipses.\n• Q2 (IDHTEC 2024): d) reminiscências da infância de um homem e seu pai.'),
+
+          makeLesson(21, 'Microconto — Parte 2 (Pontuação)', 'Pontuação como recurso expressivo de ritmo, pausa dramática e emoção.', [
+            { t: 'Atividades 1 e 2 — Efeitos do ponto final, vírgulas e exclamações', p: 'Análise de "Choraram. Riram.", isolamento por vírgulas e falas de Frederico.', a: '• Ativ. 1: a) Pontos finais em "Choraram. Riram." isolam o peso emocional de cada momento (tristeza × superação); b) as vírgulas em ", em desespero," criam pausa dramática que simula choque/hesitação.\n• Ativ. 2: c) as exclamações revelam entusiasmo genuíno e desejo de contagiar o amigo.' }
+          ], '• Q1 (ENEM 2016): d) dois-pontos introduzem argumento esclarecedor.\n• Q2 (IADES 2025 — Armandinho): d) vírgulas separam elementos de uma enumeração.'),
+
+          makeLesson(22, 'Vídeo-minuto — Parte 1', 'Gênero audiovisual de 60 segundos: síntese, linguagem multissemiótica e recorte preciso.', [
+            { t: 'Atividade 1 — Escolha do recorte preciso em 60s', p: 'Qual recorte funciona para um vídeo-minuto sobre gêneros literários?', a: '• Resposta: b) Explicar a diferença entre épico, lírico e dramático usando apenas um exemplo visual para cada gênero (recorte objetivo e dinâmico).' }
+          ], null),
+
+          makeLesson(23, 'Vídeo-minuto — Parte 2', 'Roteiro em 3 atos: Gancho (0–10s), Desenvolvimento (10–50s) e Encerramento (50–60s).', [
+            { t: 'Atividade 1 — Estrutura do roteiro multissemiótico', p: 'Como organizar o roteiro de revisão do bimestre em 60 segundos?', a: '• 0–10s (Gancho): pergunta/imagem forte apresentando o tema.\n• 10–50s (Desenvolvimento): 3 conteúdos do bimestre (ex.: Barroco, Editorial, Microconto) com palavras-chave na tela e exemplos rápidos.\n• 50–60s (Encerramento): síntese final clara + trilha coerente ao clima do vídeo.' }
+          ], null),
+
+          makeLesson(24, 'Vídeo-minuto — Parte 3', 'Avaliação audiovisual crítica e escuta ativa das produções da turma.', [
+            { t: 'Síntese de Avaliação — 3 Critérios Fundamentais', p: 'Quais critérios orientam a análise e o feedback dos vídeos-minuto?', a: '• 1. Capacidade de síntese: recorte preciso e fio condutor claro em 60s.\n• 2. Multissemiose e criatividade: harmonia entre visual (cores, fontes, cortes) e sonoro (trilha, entonação).\n• 3. Correção e relevância: precisão dos conceitos de Língua Portuguesa com exemplos práticos e feedback construtivo.' }
+          ], null),
+        ],
+      },
+
+      /* -------------------------------------------------------------------
+         8. MATEMÁTICA (Apostila 3 — 24 Aulas)
+         ------------------------------------------------------------------- */
+      {
+        id: 'matematica',
+        name: 'Matemática',
+        book: 3,
+        bookLabel: 'Apostila 3 · Linguagens & Matemática',
+        subtitle: 'Função do 2º Grau, Função do 1º Grau e Grandezas Proporcionais',
+        lessons: [
+          makeLesson(1, 'Gráfico da função do 2º grau', 'Parábola f(x)=ax²+bx+c: concavidade (a), corte em y (c), raízes e eixo de simetria.', [
+            { t: 'Atividades 1 e 2 — Túnel parabólico e Lei de formação', p: 'y = 6x − x² (largura e altura máxima) e lei pelo gráfico.', a: '• Ativ. 1: raízes x=0 e x=6 → largura = 6 m; vértice x_v=3 → altura máx y_v = 6(3)−3² = 9 m.\n• Ativ. 2: c = 4, raízes 2 e 4 → a = 1/2, b = −3 → f(x) = x²/2 − 3x + 4 → alternativa (c).' }
+          ], null),
+
+          makeLesson(2, 'Coordenadas do vértice — Parte 1', 'Fórmulas do vértice x_v = −b/(2a) e y_v = −Δ/(4a) e determinação do conjunto-imagem.', [
+            { t: 'Atividades 1, 2 e 3 — Vértice, Imagem e Castelo', p: 'Julgamento V/F, conjunto-imagem de y=3x²−6x−7 e altura de y=10−x².', a: '• Ativ. 1: V, V, F, F, V.\n• Ativ. 2: y_v = −120/12 = −10 (a>0) → Im = {y ∈ ℝ | y ≥ −10} → alternativa (e).\n• Ativ. 3: b=0 → x_v=0, y_v = 10 m → alternativa (c).' }
+          ], '• Caderno Q1–Q5: foco em cálculo de V(x_v, y_v), conjunto-imagem e área parabólica (ENEM 2016: 36 m²).'),
+
+          makeLesson(3, 'Coordenadas do vértice — Parte 2', 'Aplicações de vértice em pontes, gráficos, beisebol (UERJ) e voleibol (UNICAMP 2026).', [
+            { t: 'Atividades 1 a 5 — Exercícios de Vértice', p: 'Arco de ponte, lei com V(5,−5), mínimo de x²−12x+20, UERJ e UNICAMP 2026.', a: '• Ativ. 1: x_v = 4, y_v = 3,6 → (4; 3,6) (a).\n• Ativ. 2: f(x) = x²/5 − 2x (c).\n• Ativ. 3: mínimo igual a −16 para x = 6 (b).\n• Ativ. 4 (UERJ): x_v1 = 15 → x_A = 30; x_v2 = 35 → x_B = 40 m (b).\n• Ativ. 5 (UNICAMP 2026): c=2, V(9,3) → y = −x²/81 + 2x/9 + 2 (c).' }
+          ], '• Caderno Q6: a) Mínimo (a > 0) · b) Im = {y ∈ ℝ | y ≥ −9}.'),
+
+          makeLesson(4, 'Revisão: gráfico do 2º grau', 'Síntese de concavidade, média das raízes e coordenadas do vértice.', [
+            { t: 'Atividades 1 a 4 — Revisão de Parábolas', p: 'Gincana de cartões, y=6x−x², abscissa pelo gráfico e foguete y=20x−5x².', a: '• Ativ. 1: Cartão III (y = 3x² − 1, a=3>0) (c).\n• Ativ. 2: máximo em (3, 9) (b).\n• Ativ. 3: raízes −3 e 1 → x_v = (−3+1)/2 = −1 (b).\n• Ativ. 4: x_v = 2, y_v = 20 → (2, 20) (a).' }
+          ], null),
+
+          makeLesson(5, 'Máximo ou mínimo do 2º grau — Parte 1', 'Otimização (custo mínimo, altura máxima) e intervalos de crescimento/decrescimento.', [
+            { t: 'Atividades 1, 2 e 3 — Custo mínimo, Bola e Comportamento', p: 'C(x)=x²−50x+750, h(t)=1+12t−3t² e y=−x²+4x−3.', a: '• Ativ. 1: a) x_v = 25 unidades · b) custo mínimo = R$ 125,00.\n• Ativ. 2: y_v = −(144+12)/(−12) = 13 m (b).\n• Ativ. 3: a<0 e x_v=2 → crescente para x < 2 (c).' }
+          ], '• Caderno Q12–Q17: aplicações diretas de x_v = −b/(2a) e y_v = −Δ/(4a) (ex.: SARESP chute = 25 m).'),
+
+          makeLesson(6, 'Máximo ou mínimo do 2º grau — Parte 2', 'Modelagem de área máxima com perímetro fixo e lucro máximo (L = R − C).', [
+            { t: 'Atividades 1 e 2 — Canteiro retangular e Fábrica de peças', p: '60 m de tela para área máxima e lucro máximo com R(x) e C(x).', a: '• Ativ. 1: 2x+2y=60 → A(x)=30x−x² → área máxima = 225 m² (a).\n• Ativ. 2: L(x) = R − C = −2x² + 8000x → x_v = 2.000 peças.' }
+          ], '• Caderno Q18–Q22: problemas clássicos de faturamento, área máxima (ENEM viveiros: 25×25) e lucro máximo.'),
+
+          makeLesson(7, 'Resolução de problemas (Máximo/Mínimo)', 'Determinação de vértice, imagem, custo pelo gráfico, bola de futebol e arrecadação da van.', [
+            { t: 'Atividades 1 a 5 — Problemas de Otimização', p: 'Vértice, imagem, gráfico de custo, gol de falta e van de 14 lugares.', a: '• Ativ. 1: V(2, −1) (e).\n• Ativ. 2: Im = {y ∈ ℝ | y ≥ 2} (a).\n• Ativ. 3: C(x)=x²−30x+900 → custo mínimo R$ 675,00 (d).\n• Ativ. 4: a) h_máx = 2 m · b) tempo no ar = 8 s.\n• Ativ. 5: a) 2 lugares vagos · b) arrecadação máxima = R$ 144,00.' }
+          ], '• Caderno Q23: V(3, −13). Demais questões (Q24–Q28) seguem a mesma modelagem de vértice.'),
+
+          makeLesson(8, 'Verificação: máximo e mínimo (2º grau)', 'Checagem de domínio sobre gráficos, temperatura mínima, míssil e área monitorada.', [
+            { t: 'Atividades 1 a 4 — Aula de Verificação', p: 'V/F, experimento industrial, treinamento de míssil e câmeras em 12 km.', a: '• Ativ. 1: V, V, F, V, F.\n• Ativ. 2: a) t = 4 min · b) T_mín = 9 °C.\n• Ativ. 3: H = 2 km e alcance A = 40 km (c).\n• Ativ. 4: 2x+2y=12 → A_máx = 9 km² (a).' }
+          ], null),
+
+          makeLesson(9, 'Funções do 1º grau no cotidiano', 'Função afim f(x)=ax+b: taxa de variação (a), termo independente (b) e interseção de retas.', [
+            { t: 'Atividades 1, 2 e 3 — Características, Gráfico e Tráfego Aéreo', p: 'Associação de funções, tabela de f(x)=2x−4 e colisão de aeronaves.', a: '• Ativ. 1 (Ordem): b, a, e, c, d.\n• Ativ. 2: pontos (−1,−6), (0,−4), (1,−2), (2,0), (3,2).\n• Ativ. 3: 2x−6 = −x+9 → x=5, y=4 → ponto (5, 4) (c).' }
+          ], null),
+
+          makeLesson(10, 'Situações de função do 1º grau', 'Taxa de variação constante, gráficos lineares, frete e contraste com hipérbole.', [
+            { t: 'Atividades 1 a 4 — Bateria, Resfriamento, Trânsito e Frete', p: 'Tempo de recarga, T(t), gráfico v×t inverso e função linear de frete.', a: '• Ativ. 1: taxa = 2%/min; faltam 10% → 5 minutos.\n• Ativ. 2: a) T(t) = 20 − 2t · b) aos 5 min: 10 °C · c) −10 °C aos 15 min.\n• Ativ. 3: gráfico em ramo de hipérbole (curva decrescente, grandezas inversas).\n• Ativ. 4: v = 1,2d (c).' }
+          ], null),
+
+          makeLesson(11, 'Problemas de função do 1º grau', 'Pontuação em app, raiz, interseção de retas, progressão linear e pressão marinha.', [
+            { t: 'Atividades 1 a 5 — Problemas de Função Afim', p: 'Posto de combustível, vigilância, retas AB/CD, carros elétricos e pressão no mar.', a: '• Ativ. 1: P = 2,5v (c).\n• Ativ. 2: 12−3x=0 → x = 4 km (b).\n• Ativ. 3: P(24/5, 7/5) (a).\n• Ativ. 4: +130 carros/ano → 2030 = 3.260 carros (b).\n• Ativ. 5: P = 0,1p + 1,05 (e).' }
+          ], null),
+
+          makeLesson(12, 'Revisão: função do 1º grau', 'Consolidação de taxa de variação Δy/Δx, termo independente e ponto de encontro.', [
+            { t: 'Atividades 1 a 4 — Revisão de Função Afim', p: 'Lei pelo gráfico, população de mamíferos, aluguel por hora e cruzamento.', a: '• Ativ. 1: f(x) = −2x + 4 (b).\n• Ativ. 2: −400/ano por 6 anos → 9.200 indivíduos (c).\n• Ativ. 3: (250−100)/5 = R$ 30,00/h (b).\n• Ativ. 4: 3x−8 = 7−2x → x=3, y=1 → (3, 1) (d).' }
+          ], null),
+
+          makeLesson(13, 'Problemas de função do 2º grau — Parte 1', 'Foguete, corda entre postes, temperatura em bioma e cercado apoiado em muro.', [
+            { t: 'Atividades 1 a 4 — Aplicações Práticas (2º Grau)', p: 'Tempo de altura máxima, altura mínima, horário da máxima e área com muro.', a: '• Ativ. 1: t_v = 80/20 = 4 s (c).\n• Ativ. 2: h_mín = 2 m (a).\n• Ativ. 3: t_v = 7 h → 6h+7h = 13h, T_máx = 28 °C (d).\n• Ativ. 4: 2x+y=100 → a) 25 m × 50 m · b) área máxima = 1.250 m².' }
+          ], null),
+
+          makeLesson(14, 'Problemas de função do 2º grau — Parte 2', 'Lucro máximo, custo total mínimo, conjunto-imagem e produção ótima.', [
+            { t: 'Atividades 1 a 4 — Finanças e Imagem', p: 'Bolas de futsal, custo operacional+aquisição, intervalo imagem e peças.', a: '• Ativ. 1: L(n) = −n²+60n−500 → n = 30 bolas (b).\n• Ativ. 2: C_T = 2x²−100x+5000 → mínimo R$ 3.750,00 (a).\n• Ativ. 3: y_v = −52 (a>0) → [−52, +∞[ (e).\n• Ativ. 4: L(x)=−0,01x²+750x−100000 → x_v = 37.500 unidades (c).' }
+          ], null),
+
+          makeLesson(15, 'Problemas ENEM (Função do 2º grau)', 'Resolução de 5 questões oficiais do ENEM sobre lucro, área parabólica, projétil e teatro.', [
+            { t: 'Atividades 1 a 5 — Coletânea ENEM', p: 'Bonés (2013), túnel (2016), chocolates (2020), canhão (2018) e teatro (2021).', a: '• Ativ. 1 (ENEM 2013): x_v = 6 bonés (b).\n• Ativ. 2 (ENEM 2016): (2/3)·6·9 = 36 m² (c).\n• Ativ. 3 (ENEM 2020): x_v = R$ 7,00 → Barra IV (d).\n• Ativ. 4 (ENEM PPL 2018): 225y = −x² + 150x (e).\n• Ativ. 5 (ENEM Digital 2021): parábola pontilhada com concavidade p/ baixo (e).' }
+          ], null),
+
+          makeLesson(16, 'Verificação: funções do 1º e 2º grau', 'Avaliação integrada de função linear/afim e otimização geométrica quadrática.', [
+            { t: 'Atividades 1 a 4 — Aula de Verificação', p: 'Transporte por app, bateria UEG, gráfico afim e triângulo inscrito em retângulo.', a: '• Ativ. 1: a) P(d)=3d+5 · b) 10 km = R$ 35 · c) R$ 23 = 6 km.\n• Ativ. 2 (UEG): 150 min = 2h30min (b).\n• Ativ. 3: f(x) = −2x + 4 (a).\n• Ativ. 4: a) x = 6 m e y = 6 m · b) área máxima = 18 m².' }
+          ], null),
+
+          makeLesson(17, 'Explorando a variação entre grandezas', 'Razões do cotidiano (escala, velocidade média, renda per capita) e proporcionalidade.', [
+            { t: 'Atividades 1, 2 e 3 — Pãezinhos, Escala e Velocidade', p: 'Mistura de pão, mapa 1:20.000 e trajeto de ônibus/carro/bike.', a: '• Ativ. 1: 20 kg = 4×5 kg → mínimo 400 pãezinhos (c).\n• Ativ. 2: 5 · 20.000 cm = 100.000 cm = 1 km (a).\n• Ativ. 3: carro (80 km/h) = 12 min; bicicleta (20 km/h) = 48 min (e).' }
+          ], null),
+
+          makeLesson(18, 'Grandezas diretamente proporcionais', 'Razão constante (y/x = k), propriedade fundamental e divisão proporcional direta.', [
+            { t: 'Atividades 1, 2 e 3 — Pizzas, Herança e Aluguel de Quiosque', p: 'Regra de três direta, partilha proporcional e acréscimo percentual.', a: '• Ativ. 1: 900/4 = x/2 → 450 g de queijo (e).\n• Ativ. 2: 2k+5k+3k=500 → k=50 → 5k = R$ 250.000,00 (d).\n• Ativ. 3: 8 m² → R$ 3.000; 10 m² → R$ 3.750 + 10% = R$ 4.125,00.' }
+          ], null),
+
+          makeLesson(19, 'Grandezas inversamente proporcionais', 'Produto constante (x·y = k), Lei de Boyle-Mariotte e divisão inversamente proporcional.', [
+            { t: 'Atividades 1, 2 e 3 — Conceito, Gás Ideal e Dívida dos Sócios', p: 'Identificação de grandezas inversas, pressão/volume e divisão de R$ 58.000.', a: '• Ativ. 1: c) vazão de um ralo e tempo para esvaziar o reservatório.\n• Ativ. 2: 60·5 = 4·V → V = 75 litros (e).\n• Ativ. 3: lotes 40, 50, 10 → k/4 + k/5 + k = 58 → k = 40 → Carlos paga R$ 40.000,00.' }
+          ], null),
+
+          makeLesson(20, 'Revisão: grandezas proporcionais', 'Diferenciação prática entre quociente constante (direta) e produto constante (inversa).', [
+            { t: 'Atividades 1 a 4 — Revisão de Proporcionalidade', p: 'Escala 1:25.000, moto/carro, calorias e divisão de despesas.', a: '• Ativ. 1: 4·25.000 cm = 1 km (c).\n• Ativ. 2: 40·30 = 15·x → x = 80 km/h (d).\n• Ativ. 3: 15/90 = 100/x → 600 calorias (c).\n• Ativ. 4: André R$ 240, Bruno R$ 160 → R$ 80,00 a mais (a).' }
+          ], null),
+
+          makeLesson(21, 'Modelagem algébrica de grandezas', 'Sentenças algébricas combinando múltiplas grandezas direta e inversamente proporcionais.', [
+            { t: 'Atividades 1, 2 e 3 — Fábrica, Vigas (ENEM) e Resistência (ENEM)', p: 'P = k·H·M, resistência de viga e resistência elétrica.', a: '• Ativ. 1: k = 20; 480 = 20·H·6 → H = 4 horas.\n• Ativ. 2 (ENEM 2011): S = k·b·d² (c).\n• Ativ. 3 (ENEM 2010): direta, inversa e direta (c).' }
+          ], null),
+
+          makeLesson(22, 'Grandezas no plano cartesiano', 'Reta pela origem (direta: y=kx), ramo de hipérbole (inversa: y=k/x) e relações não proporcionais.', [
+            { t: 'Atividades 1, 2 e 3 — Massa/Volume, Período/Frequência e ENEM', p: 'Leitura de gráfico linear, curva f=1/T e tabagismo (ENEM 2009).', a: '• Ativ. 1: k = 1,25 → para 50 g, v = 62,5 mL (d).\n• Ativ. 2: ramo de hipérbole decrescente (inversamente proporcionais).\n• Ativ. 3 (ENEM 2009): e) relacionadas, mas sem proporcionalidade.' }
+          ], null),
+
+          makeLesson(23, 'Problemas de proporcionalidade', 'Questões de vestibulares (ETEC, UFPR, ENEM) envolvendo proporcionalidade direta, inversa e quadrática.', [
+            { t: 'Atividades 1 a 5 — ETEC, UFPR e ENEM', p: 'Taxa de lotação, colheitadeiras, cortisol, intensidade de sinal e satélites.', a: '• Ativ. 1 (ETEC 2026): 500 UA / 100 ha = 5,0 UA/ha (b).\n• Ativ. 2 (UFPR 2026): a) 45 dias · b) 5 colheitadeiras.\n• Ativ. 3 (ENEM 2015): T / F = 1,59 (c).\n• Ativ. 4 (ENEM PPL 2025): I₁ = 4·I₂ (a).\n• Ativ. 5 (ENEM 2018): F_C < F_A < F_B (e).' }
+          ], null),
+
+          makeLesson(24, 'Verificação: grandezas proporcionais', 'Fechamento bimestral com problemas gráficos, robôs, gincana e gravitação.', [
+            { t: 'Atividades 1 a 4 — Aula de Verificação Final', p: 'Gráfico massa/volume, robôs, barras de chocolate e satélites A/B.', a: '• Ativ. 1: 30/50 = V/70 → 42 cm³ (b).\n• Ativ. 2: 6·4 = 10·t → 2,4 h = 2h24min (a).\n• Ativ. 3: soma = 80 → k = 0,5 → 34·0,5 = 17 barras (b).\n• Ativ. 4: massa 2× e raio 2× → F_B = (2/4)F_A → F_A = 2·F_B (d).' }
+          ], null),
+        ],
+      },
+    ];
+
+    /* =====================================================================
+       4. ESTADO DA APLICAÇÃO & PERSISTÊNCIA (LOCALSTORAGE)
+       ===================================================================== */
+    const STORAGE_KEY = 'nexo_completed_v1';
+    const state = {
+      screen: 'hub',          // 'hub' | 'timeline' | 'activity'
+      bookFilter: 'all',      // 'all' | 1 | 2 | 3
+      hubIndex: 0,
+      subjectId: null,
+      lessonIndex: 0,
+      activityIndex: 0,
+      completed: loadCompleted(),
+      nexoMode: 'concept',    // 'concept' | 'steps' | 'tip' | 'chat'
+      chatHistory: [],
+    };
+
+    function loadCompleted() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveCompleted() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.completed));
+      } catch (e) {
+        // Silencioso caso storage esteja bloqueado
+      }
+    }
+
+    function getActKey(subjectId, lessonNum, actId) {
+      return `${subjectId}::${lessonNum}::${actId}`;
+    }
+
+    function isActivityDone(subjectId, lessonNum, actId) {
+      return Boolean(state.completed[getActKey(subjectId, lessonNum, actId)]);
+    }
+
+    function isLessonDone(subjectId, lesson) {
+      return lesson.activities.length > 0 && lesson.activities.every((a) => isActivityDone(subjectId, lesson.num, a.id));
+    }
+
+    function getSubjectProgress(subject) {
+      const total = subject.lessons.length;
+      const done = subject.lessons.filter((l) => isLessonDone(subject.id, l)).length;
+      return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+    }
+
+    function updateGlobalProgress() {
+      let total = 0;
+      let done = 0;
+      SUBJECTS.forEach((s) => {
+        const p = getSubjectProgress(s);
+        total += p.total;
+        done += p.done;
+      });
+      const txt = document.getElementById('global-progress-text');
+      const bar = document.getElementById('global-progress-bar');
+      if (txt) txt.textContent = `${done} / ${total} aulas`;
+      if (bar) bar.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
+    }
+
+    /* =====================================================================
+       5. UTILITÁRIOS (TOAST, COPY COMPATÍVEL COM IFRAME, ESCAPE HTML)
+       ===================================================================== */
+    let toastTimer = null;
+    function showToast(message) {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = message;
+      el.classList.remove('opacity-0', 'translate-y-2');
+      el.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.classList.remove('opacity-100', 'translate-y-0');
+        el.classList.add('opacity-0', 'translate-y-2');
+      }, 2200);
+    }
+
+    function copyTextSafe(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Resposta copiada!');
+      } catch (e) {
+        showToast('Não foi possível copiar.');
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatMultiline(str) {
+      return escapeHtml(str).replace(/\n/g, '<br>');
+    }
+
+    function getFilteredSubjects() {
+      if (state.bookFilter === 'all') return SUBJECTS;
+      return SUBJECTS.filter((s) => s.book === state.bookFilter);
+    }
+
+    /* =====================================================================
+       6. RENDERIZAÇÃO PRINCIPAL
+       ===================================================================== */
+    const mainEl = document.getElementById('app-main');
+
+    function render() {
+      updateGlobalProgress();
+      if (state.screen === 'hub') renderHub();
+      else if (state.screen === 'timeline') renderTimeline();
+      else if (state.screen === 'activity') renderActivity();
+    }
+
+    /* ---------------------------------------------------------------------
+       TELA 1 — HUB ESPACIAL DE MATÉRIAS
+       --------------------------------------------------------------------- */
+    function renderHub() {
+      const list = getFilteredSubjects();
+      if (state.hubIndex >= list.length) state.hubIndex = 0;
+
+      const filters = [
+        { id: 'all', label: 'Todas (8)' },
+        { id: 1, label: 'Apostila 1: Humanas & Inglês' },
+        { id: 2, label: 'Apostila 2: Natureza' },
+        { id: 3, label: 'Apostila 3: Linguagens & Mat' },
+      ];
+
+      mainEl.innerHTML = `
+        <section class="screen-enter flex-1 flex flex-col justify-center max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <!-- HERO EDITORIAL / NÚCLEO ORBITAL — SEM ALTERAR O CONTEÚDO -->
+          <div class="nexo-hero">
+            <div class="hero-copy">
+              <div class="hero-eyebrow"><span class="hero-live-dot"></span> NEXO / AMBIENTE ACADÊMICO · VOLUME 04</div>
+              <h1 class="hero-title">Escolha uma<br><span class="gradient-word">matéria.</span></h1>
+              <p class="hero-description">Navegue pelas 8 disciplinas, acesse a linha temporal das 114 aulas e consulte respostas resumidas com apoio do Agente NEXO.</p>
+              <div class="hero-actions">
+                <button id="hero-explore" type="button" class="hero-primary">Explorar matérias <span aria-hidden="true">↗</span></button>
+                <button id="hero-resume" type="button" class="hero-secondary">Buscar uma aula ↗</button>
+              </div>
+              <div class="hero-meta"><span><b>●</b> PROGRESSO LOCAL</span><span><b>◈</b> 8 DISCIPLINAS</span><span><b>↗</b> 114 AULAS</span></div>
+            </div>
+            <div class="orbit-scene" aria-hidden="true">
+              <div class="orbit-ring r3"></div><div class="orbit-ring r2"></div><div class="orbit-ring r1"></div>
+              <div class="orbit-core">
+                <svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M19 76V24L65 76V24" stroke="#F5F8FF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="79" cy="24" r="7" fill="#72E2FF"/></svg>
+              </div>
+              <div class="orbit-satellite s1"><span class="pixel"></span> CONHECIMENTO</div>
+              <div class="orbit-satellite s2"><span class="pixel"></span> EXPLORAÇÃO</div>
+              <div class="orbit-satellite s3"><span class="pixel"></span> EVOLUÇÃO</div>
+              <span class="orbit-label">NEXO SYSTEM // 01</span>
+            </div>
+          </div>
+
+          <div class="nexo-dashboard" aria-label="Visão geral do estudo">
+            <div class="metric-card"><div><div class="metric-number" id="metric-lessons">114</div><div class="metric-label">Aulas disponíveis</div></div><div class="metric-symbol"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4.5 19.5A2.5 2.5 0 0 1 7 17h12.5M7 2.5h12.5v19H7a2.5 2.5 0 0 1-2.5-2.5V5A2.5 2.5 0 0 1 7 2.5Z"/></svg></div></div>
+            <div class="metric-card"><div><div class="metric-number">08</div><div class="metric-label">Matérias</div></div><div class="metric-symbol"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div></div>
+            <div class="metric-card"><div><div class="metric-number" id="metric-done">0</div><div class="metric-label">Aulas concluídas</div></div><div class="metric-symbol"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a9 9 0 1 0 9 9"/><path d="m8 12 3 3 9-10" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          </div>
+          <div id="nexo-subjects" class="nexo-section-head">
+            <div><div class="tiny-index">01 / BIBLIOTECA</div><h2>Seu universo de estudos</h2><p>Escolha uma disciplina para navegar pelas aulas</p></div>
+            <span class="floating-tag">EXPLORE O CONTEÚDO ↓</span>
+          </div>
+          <!-- Filtros de Apostila -->
+          <div class="flex flex-wrap items-center justify-center gap-2 mb-10">
+            ${filters.map((f) => {
+              const active = state.bookFilter === f.id;
+              return `
+                <button
+                  data-filter="${f.id}"
+                  class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    active
+                      ? 'bg-white text-[#050507] border-white shadow-[0_0_20px_rgba(255,255,255,0.25)]'
+                      : 'bg-white/[0.03] text-[#9a9aa4] border-white/10 hover:border-white/25 hover:text-white'
+                  }"
+                >
+                  ${f.label}
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Carrossel Espacial Flutuante -->
+          <div class="relative">
+            <!-- Linha luminosa horizontal ao fundo -->
+            <div class="horizon-line absolute left-0 right-0 top-1/2 -translate-y-1/2 pointer-events-none"></div>
+
+            <!-- Botão Esquerda -->
+            <button
+              id="carousel-prev"
+              aria-label="Matéria anterior"
+              class="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/15 bg-[#0a0a0e]/90 backdrop-blur-md items-center justify-center text-white/80 hover:text-white hover:border-white/40 transition-all"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <!-- Faixa de Cards -->
+            <div
+              id="hub-carousel"
+              class="relative z-10 flex items-stretch gap-4 sm:gap-5 overflow-x-auto no-scrollbar py-6 px-2 sm:px-8 snap-x snap-mandatory cursor-grab active:cursor-grabbing" aria-label="Disciplinas disponíveis"
+            >
+              ${list.map((s, idx) => {
+                const prog = getSubjectProgress(s);
+                const isActive = idx === state.hubIndex;
+                return `
+                  <article
+                    data-subject-id="${s.id}"
+                    data-idx="${idx}"
+                    style="animation-delay: ${(idx * 0.45).toFixed(2)}s"
+                    class="subject-card float-anim snap-center shrink-0 w-[250px] sm:w-[275px] rounded-2xl glass-card p-5 sm:p-6 flex flex-col justify-between cursor-pointer select-none ${
+                      isActive ? 'subject-card-active' : 'opacity-85 hover:opacity-100'
+                    }"
+                  >
+                    <div>
+                      <div class="flex items-center justify-between mb-5">
+                        <div class="w-11 h-11 rounded-xl border border-white/15 bg-white/[0.05] flex items-center justify-center text-white">
+                          ${SUBJECT_ICONS[s.id]}
+                        </div>
+                        <span class="text-[11px] font-medium text-[#8a8a93] px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03]">
+                          ${s.lessons.length} aulas
+                        </span>
+                      </div>
+
+                      <h2 class="text-lg font-semibold text-white tracking-tight mb-1">${s.name}</h2>
+                      <p class="text-[11px] text-[#7a7a84] mb-3">${s.bookLabel}</p>
+                      <p class="text-xs text-[#9b9ba5] leading-relaxed line-clamp-2">${s.subtitle}</p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-white/[0.07]">
+                      <div class="flex items-center justify-between text-[11px] text-[#8a8a93] mb-1.5">
+                        <span>Revisado</span>
+                        <span class="tabular-nums text-white/90">${prog.done}/${prog.total}</span>
+                      </div>
+                      <div class="w-full h-1 rounded-full bg-white/10 overflow-hidden">
+                        <div class="h-full bg-white rounded-full transition-all duration-500" style="width: ${prog.pct}%"></div>
+                      </div>
+                    </div>
+                  </article>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Botão Direita -->
+            <button
+              id="carousel-next"
+              aria-label="Próxima matéria"
+              class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/15 bg-[#0a0a0e]/90 backdrop-blur-md items-center justify-center text-white/80 hover:text-white hover:border-white/40 transition-all"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+
+          <div class="nexo-hud-strip" aria-hidden="true"><span><i></i> ACESSO INSTANTÂNEO</span><span><i></i> PROGRESSO PERSISTENTE</span><span><i></i> INTERFACE RESPONSIVA</span></div>
+
+          <!-- Dica discreta de navegação -->
+          <div class="mt-6 flex items-center justify-center gap-4 text-[11px] text-[#6d6d76]">
+            <span>← → Navegar</span>
+            <span>·</span>
+            <span>Enter ou Clique para abrir</span>
+            <span>·</span>
+            <span>Ctrl + K para busca rápida</span>
+          </div>
+        </section>
+      `;
+
+      // Eventos dos filtros
+      mainEl.querySelectorAll('.filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const val = btn.dataset.filter;
+          state.bookFilter = val === 'all' ? 'all' : Number(val);
+          state.hubIndex = 0;
+          renderHub();
+        });
+      });
+
+      // Eventos dos cards
+      const carousel = document.getElementById('hub-carousel');
+      mainEl.querySelectorAll('.subject-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          if (carousel && carousel.dataset.dragged === 'true') return;
+          openSubject(card.dataset.subjectId);
+        });
+        card.addEventListener('mouseenter', () => {
+          state.hubIndex = Number(card.dataset.idx);
+          highlightHubCard();
+        });
+      });
+
+      // Setas laterais
+      const prevBtn = document.getElementById('carousel-prev');
+      const nextBtn = document.getElementById('carousel-next');
+      if (prevBtn) prevBtn.addEventListener('click', () => moveHubCarousel(-1));
+      if (nextBtn) nextBtn.addEventListener('click', () => moveHubCarousel(1));
+
+      // Arraste horizontal com mouse
+      if (carousel) {
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        carousel.addEventListener('mousedown', (e) => {
+          isDown = true;
+          carousel.dataset.dragged = 'false';
+          startX = e.pageX - carousel.offsetLeft;
+          scrollStart = carousel.scrollLeft;
+        });
+        window.addEventListener('mouseup', () => { isDown = false; });
+        carousel.addEventListener('mousemove', (e) => {
+          if (!isDown) return;
+          const x = e.pageX - carousel.offsetLeft;
+          const walk = (x - startX) * 1.4;
+          if (Math.abs(walk) > 6) carousel.dataset.dragged = 'true';
+          carousel.scrollLeft = scrollStart - walk;
+        });
+      }
+    }
+
+    function highlightHubCard() {
+      const cards = mainEl.querySelectorAll('.subject-card');
+      cards.forEach((c, idx) => {
+        if (idx === state.hubIndex) {
+          c.classList.add('subject-card-active');
+          c.classList.remove('opacity-85');
+        } else {
+          c.classList.remove('subject-card-active');
+          c.classList.add('opacity-85');
+        }
+      });
+    }
+
+    function moveHubCarousel(dir) {
+      const list = getFilteredSubjects();
+      if (!list.length) return;
+      state.hubIndex = (state.hubIndex + dir + list.length) % list.length;
+      highlightHubCard();
+      const target = mainEl.querySelector(`.subject-card[data-idx="${state.hubIndex}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+
+    function openSubject(subjectId, lessonIdx = 0) {
+      state.subjectId = subjectId;
+      state.lessonIndex = lessonIdx;
+      state.screen = 'timeline';
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ---------------------------------------------------------------------
+       TELA 2 — LINHA TEMPORAL DAS AULAS
+       --------------------------------------------------------------------- */
+    function renderTimeline() {
+      const subject = SUBJECTS.find((s) => s.id === state.subjectId);
+      if (!subject) return openHub();
+      const lesson = subject.lessons[state.lessonIndex] || subject.lessons[0];
+      const prog = getSubjectProgress(subject);
+
+      const praticaActs = lesson.activities.filter((a) => a.type === 'Na prática');
+      const cadernoActs = lesson.activities.filter((a) => a.type === 'Caderno de Exercícios');
+
+      mainEl.innerHTML = `
+        <section class="screen-enter flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+          <!-- Topo da matéria -->
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div>
+              <button
+                id="btn-back-hub"
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-[#8a8a93] hover:text-white transition-colors mb-3"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Matérias
+              </button>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl border border-white/15 bg-white/[0.05] flex items-center justify-center text-white">
+                  ${SUBJECT_ICONS[subject.id]}
+                </div>
+                <div>
+                  <h1 class="text-2xl sm:text-4xl font-semibold tracking-tight text-white">${subject.name}</h1>
+                  <p class="text-xs text-[#8a8a93]">${subject.bookLabel} · ${subject.lessons.length} aulas</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs text-[#8a8a93]">
+              <span class="tabular-nums">${prog.done}/${prog.total} aulas concluídas</span>
+              <div class="w-24 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div class="h-full bg-white rounded-full transition-all duration-500" style="width: ${prog.pct}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Linha Temporal Horizontal Numerada -->
+          <div class="relative mb-8 py-4">
+            <div class="horizon-line absolute left-0 right-0 top-1/2 -translate-y-1/2 pointer-events-none"></div>
+            <div
+              id="timeline-track"
+              class="relative z-10 flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-2 px-1"
+            >
+              ${subject.lessons.map((l, idx) => {
+                const active = idx === state.lessonIndex;
+                const done = isLessonDone(subject.id, l);
+                const label = String(l.num).padStart(2, '0');
+                return `
+                  <button
+                    data-lesson-idx="${idx}"
+                    class="timeline-node shrink-0 flex flex-col items-center gap-2 group focus:outline-none px-1.5"
+                    title="Aula ${label}: ${escapeHtml(l.title)}"
+                  >
+                    <span class="text-xs font-medium tabular-nums transition-colors ${
+                      active ? 'text-white' : 'text-[#7b7b85] group-hover:text-white/80'
+                    }">${label}</span>
+                    <span class="w-3.5 h-3.5 rounded-full border transition-all flex items-center justify-center ${
+                      active
+                        ? 'bg-white border-white scale-125 node-glow'
+                        : done
+                          ? 'bg-white/75 border-white/80'
+                          : 'bg-[#0c0c10] border-white/25 group-hover:border-white/60'
+                    }"></span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Painel da Aula Selecionada -->
+          <div class="glass-card rounded-2xl p-5 sm:p-7 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <span class="text-[11px] uppercase tracking-[0.16em] text-[#8a8a93]">
+                Aula ${String(lesson.num).padStart(2, '0')}
+              </span>
+              <span class="text-xs text-[#8a8a93]">
+                ${lesson.activities.length} ${lesson.activities.length === 1 ? 'bloco de resposta' : 'blocos de resposta'}
+              </span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-semibold text-white tracking-tight mb-2">
+              ${escapeHtml(lesson.title)}
+            </h2>
+            <p class="text-sm text-[#9c9ca6] leading-relaxed">
+              ${escapeHtml(lesson.summary)}
+            </p>
+          </div>
+
+          <!-- Cards Clicáveis das Atividades -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${[...praticaActs, ...cadernoActs].map((act) => {
+              const globalActIdx = lesson.activities.findIndex((x) => x.id === act.id);
+              const done = isActivityDone(subject.id, lesson.num, act.id);
+              const isCaderno = act.type === 'Caderno de Exercícios';
+              return `
+                <button
+                  data-act-idx="${globalActIdx}"
+                  class="activity-open-btn glass-card rounded-2xl p-5 text-left flex flex-col justify-between group focus:outline-none"
+                >
+                  <div>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                        isCaderno
+                          ? 'border-white/20 bg-white/[0.08] text-white'
+                          : 'border-white/10 bg-white/[0.03] text-[#a5a5af]'
+                      }">
+                        ${act.type}
+                      </span>
+                      <span class="inline-flex items-center gap-1.5 text-[11px] ${done ? 'text-white' : 'text-[#6e6e78]'}">
+                        <span class="w-1.5 h-1.5 rounded-full ${done ? 'bg-white' : 'bg-white/20'}"></span>
+                        ${done ? 'Concluída' : 'Pendente'}
+                      </span>
+                    </div>
+                    <h3 class="text-base font-medium text-white group-hover:translate-x-0.5 transition-transform mb-1.5">
+                      ${escapeHtml(act.title)}
+                    </h3>
+                    <p class="text-xs text-[#8a8a93] line-clamp-2 leading-relaxed">
+                      ${escapeHtml(act.prompt)}
+                    </p>
+                  </div>
+
+                  <div class="mt-4 pt-3 border-t border-white/[0.07] flex items-center justify-between text-xs text-[#a5a5af] group-hover:text-white transition-colors">
+                    <span>Ver resposta resumida + NEXO</span>
+                    <span>→</span>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      `;
+
+      document.getElementById('btn-back-hub').addEventListener('click', openHub);
+
+      mainEl.querySelectorAll('.timeline-node').forEach((node) => {
+        node.addEventListener('click', () => {
+          state.lessonIndex = Number(node.dataset.lessonIdx);
+          renderTimeline();
+        });
+      });
+
+      mainEl.querySelectorAll('.activity-open-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          openActivity(subject.id, state.lessonIndex, Number(btn.dataset.actIdx));
+        });
+      });
+
+      // Centraliza o nó ativo na linha temporal
+      const activeNode = mainEl.querySelector(`.timeline-node[data-lesson-idx="${state.lessonIndex}"]`);
+      if (activeNode) {
+        activeNode.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+
+    function openHub() {
+      state.screen = 'hub';
+      render();
+    }
+
+    function openActivity(subjectId, lessonIdx, actIdx = 0) {
+      state.subjectId = subjectId;
+      state.lessonIndex = lessonIdx;
+      state.activityIndex = actIdx;
+      state.nexoMode = 'concept';
+      state.chatHistory = [];
+      state.screen = 'activity';
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ---------------------------------------------------------------------
+       TELA 3 — RESPOSTA RESUMIDA + AGENTE NEXO (2 COLUNAS)
+       --------------------------------------------------------------------- */
+    function getFlatActivityList(subject) {
+      const flat = [];
+      subject.lessons.forEach((l, lIdx) => {
+        l.activities.forEach((a, aIdx) => {
+          flat.push({ lessonIdx: lIdx, actIdx: aIdx, lesson: l, act: a });
+        });
+      });
+      return flat;
+    }
+
+    function renderActivity() {
+      const subject = SUBJECTS.find((s) => s.id === state.subjectId);
+      if (!subject) return openHub();
+      const lesson = subject.lessons[state.lessonIndex];
+      const act = lesson.activities[state.activityIndex] || lesson.activities[0];
+      const done = isActivityDone(subject.id, lesson.num, act.id);
+
+      const flat = getFlatActivityList(subject);
+      const currentFlatIdx = flat.findIndex(
+        (item) => item.lessonIdx === state.lessonIndex && item.actIdx === state.activityIndex
+      );
+      const prevItem = currentFlatIdx > 0 ? flat[currentFlatIdx - 1] : null;
+      const nextItem = currentFlatIdx < flat.length - 1 ? flat[currentFlatIdx + 1] : null;
+
+      mainEl.innerHTML = `
+        <section class="screen-enter flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <!-- Breadcrumb -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div class="flex items-center gap-2 text-xs text-[#8a8a93]">
+              <button id="bc-hub" class="hover:text-white transition-colors">Matérias</button>
+              <span>/</span>
+              <button id="bc-subject" class="hover:text-white transition-colors">${subject.name}</button>
+              <span>/</span>
+              <span class="text-white font-medium">Aula ${String(lesson.num).padStart(2, '0')}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                id="btn-prev-act"
+                ${!prevItem ? 'disabled' : ''}
+                class="px-3 py-1.5 rounded-xl text-xs border border-white/10 bg-white/[0.03] transition-all ${
+                  prevItem ? 'text-white hover:border-white/30 hover:bg-white/[0.07]' : 'text-white/25 cursor-not-allowed'
+                }"
+              >← Anterior</button>
+              <button
+                id="btn-next-act"
+                ${!nextItem ? 'disabled' : ''}
+                class="px-3 py-1.5 rounded-xl text-xs border border-white/10 bg-white/[0.03] transition-all ${
+                  nextItem ? 'text-white hover:border-white/30 hover:bg-white/[0.07]' : 'text-white/25 cursor-not-allowed'
+                }"
+              >Próxima →</button>
+            </div>
+          </div>
+
+          <!-- Grid 2 Colunas -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <!-- COLUNA ESQUERDA: RESPOSTA RESUMIDA -->
+            <div class="lg:col-span-7 glass-card rounded-2xl p-5 sm:p-7">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium border border-white/15 bg-white/[0.05] text-white/90">
+                  ${act.type}
+                </span>
+                <span class="text-[11px] text-[#8a8a93]">${escapeHtml(lesson.title)}</span>
+              </div>
+
+              <h1 class="text-xl sm:text-2xl font-semibold text-white tracking-tight mb-2">
+                ${escapeHtml(act.title)}
+              </h1>
+              <p class="text-xs sm:text-sm text-[#8a8a93] leading-relaxed mb-6">
+                ${escapeHtml(act.prompt)}
+              </p>
+
+              <!-- Card Destacado da Resposta Resumida -->
+              <div class="rounded-2xl border border-white/20 bg-white/[0.04] p-5 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-[11px] uppercase tracking-[0.16em] text-white/70 font-medium">
+                    Resposta Resumida
+                  </span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                </div>
+                <div class="text-sm sm:text-[15px] text-[#f5f5f7] leading-relaxed space-y-2">
+                  ${formatMultiline(act.answer)}
+                </div>
+              </div>
+
+              <!-- Ações -->
+              <div class="mt-6 flex flex-wrap items-center gap-3">
+                <button
+                  id="btn-copy-answer"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium bg-white text-[#050507] hover:bg-white/90 transition-all"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copiar resposta
+                </button>
+
+                <button
+                  id="btn-toggle-done"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border transition-all ${
+                    done
+                      ? 'border-white/40 bg-white/15 text-white'
+                      : 'border-white/15 bg-white/[0.03] text-[#c0c0c8] hover:border-white/30 hover:text-white'
+                  }"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  ${done ? 'Concluída' : 'Marcar concluída'}
+                </button>
+              </div>
+            </div>
+
+            <!-- COLUNA DIREITA: AGENTE NEXO (100% LOCAL) -->
+            <aside class="lg:col-span-5 glass-card rounded-2xl p-5 sm:p-6 flex flex-col min-h-[440px]">
+              <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg border border-white/20 bg-white/[0.08] flex items-center justify-center">
+                    <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                  </div>
+                  <div>
+                    <h2 class="text-sm font-semibold text-white tracking-wide">NEXO Assistente</h2>
+                    <p class="text-[11px] text-[#8a8a93]">Respostas locais instantâneas</p>
+                  </div>
+                </div>
+                <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md border border-white/10 text-[#8a8a93]">
+                  Local
+                </span>
+              </div>
+
+              <!-- 3 Botões Pré-programados -->
+              <div class="flex flex-wrap gap-2 mb-4">
+                <button data-nexo-mode="concept" class="nexo-pill px-3 py-1.5 rounded-full text-xs font-medium border transition-all">
+                  Explicar conceito
+                </button>
+                <button data-nexo-mode="steps" class="nexo-pill px-3 py-1.5 rounded-full text-xs font-medium border transition-all">
+                  Passo a passo
+                </button>
+                <button data-nexo-mode="tip" class="nexo-pill px-3 py-1.5 rounded-full text-xs font-medium border transition-all">
+                  Dica de prova
+                </button>
+              </div>
+
+              <!-- Saída do Agente NEXO -->
+              <div
+                id="nexo-output"
+                class="flex-1 rounded-xl border border-white/10 bg-[#08080c]/90 p-4 text-xs sm:text-sm text-[#d4d4dc] leading-relaxed overflow-y-auto thin-scroll max-h-[300px] mb-4 space-y-3"
+              ></div>
+
+              <!-- Chat Local -->
+              <form id="nexo-chat-form" class="flex items-center gap-2">
+                <input
+                  id="nexo-chat-input"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Pergunte ao NEXO sobre esta aula ou outro tema..."
+                  class="flex-1 px-3.5 py-2.5 rounded-xl border border-white/12 bg-white/[0.03] text-xs sm:text-sm text-white placeholder-[#6f6f78] focus:outline-none focus:border-white/35 transition-colors"
+                />
+                <button
+                  type="submit"
+                  class="px-3.5 py-2.5 rounded-xl bg-white text-[#050507] text-xs font-semibold hover:bg-white/90 transition-colors shrink-0"
+                >
+                  Enviar
+                </button>
+              </form>
+            </aside>
+          </div>
+        </section>
+      `;
+
+      // Navegação Breadcrumb e Anterior/Próxima
+      document.getElementById('bc-hub').addEventListener('click', openHub);
+      document.getElementById('bc-subject').addEventListener('click', () => openSubject(subject.id, state.lessonIndex));
+      if (prevItem) {
+        document.getElementById('btn-prev-act').addEventListener('click', () =>
+          openActivity(subject.id, prevItem.lessonIdx, prevItem.actIdx)
+        );
+      }
+      if (nextItem) {
+        document.getElementById('btn-next-act').addEventListener('click', () =>
+          openActivity(subject.id, nextItem.lessonIdx, nextItem.actIdx)
+        );
+      }
+
+      // Copiar resposta
+      document.getElementById('btn-copy-answer').addEventListener('click', () => {
+        copyTextSafe(`${subject.name} — Aula ${String(lesson.num).padStart(2, '0')} (${act.title})\n\n${act.answer}`);
+      });
+
+      // Marcar concluída
+      document.getElementById('btn-toggle-done').addEventListener('click', () => {
+        const key = getActKey(subject.id, lesson.num, act.id);
+        if (state.completed[key]) {
+          delete state.completed[key];
+          showToast('Atividade desmarcada.');
+        } else {
+          state.completed[key] = true;
+          showToast('Atividade marcada como concluída!');
+        }
+        saveCompleted();
+        renderActivity();
+      });
+
+      // Botões do Agente NEXO
+      const pills = mainEl.querySelectorAll('.nexo-pill');
+      function updateNexoPills() {
+        pills.forEach((p) => {
+          const active = p.dataset.nexoMode === state.nexoMode;
+          p.className = `nexo-pill px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+            active
+              ? 'bg-white text-[#050507] border-white'
+              : 'bg-white/[0.03] text-[#9b9ba5] border-white/12 hover:border-white/30 hover:text-white'
+          }`;
+        });
+      }
+
+      function showNexoPreset(mode) {
+        state.nexoMode = mode;
+        updateNexoPills();
+        const titleMap = {
+          concept: 'Conceito-chave',
+          steps: 'Passo a passo',
+          tip: 'Dica de prova',
+        };
+        const contentMap = {
+          concept: act.concept,
+          steps: act.steps,
+          tip: act.tip,
+        };
+        typeIntoNexo(titleMap[mode], contentMap[mode]);
+      }
+
+      pills.forEach((p) => {
+        p.addEventListener('click', () => showNexoPreset(p.dataset.nexoMode));
+      });
+
+      // Chat local inteligente do NEXO
+      const chatForm = document.getElementById('nexo-chat-form');
+      const chatInput = document.getElementById('nexo-chat-input');
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = chatInput.value.trim();
+        if (!q) return;
+        chatInput.value = '';
+        state.nexoMode = 'chat';
+        updateNexoPills();
+        handleLocalNexoQuery(q, subject, lesson, act);
+      });
+
+      // Exibe conceito inicial
+      showNexoPreset('concept');
+    }
+
+    let typingInterval = null;
+    function typeIntoNexo(heading, text, extraHtml = '') {
+      const out = document.getElementById('nexo-output');
+      if (!out) return;
+      clearInterval(typingInterval);
+      out.innerHTML = `
+        <div class="text-[11px] uppercase tracking-[0.14em] text-[#8a8a93]">${escapeHtml(heading)}</div>
+        <div id="nexo-typed" class="typing-caret whitespace-pre-line text-[#e5e5ec]"></div>
+        <div id="nexo-extra"></div>
+      `;
+      const target = document.getElementById('nexo-typed');
+      const extra = document.getElementById('nexo-extra');
+      let i = 0;
+      const step = Math.max(2, Math.ceil(text.length / 45));
+      typingInterval = setInterval(() => {
+        i += step;
+        if (i >= text.length) {
+          target.textContent = text;
+          target.classList.remove('typing-caret');
+          if (extraHtml) extra.innerHTML = extraHtml;
+          clearInterval(typingInterval);
+        } else {
+          target.textContent = text.slice(0, i);
+        }
+      }, 14);
+    }
+
+    function handleLocalNexoQuery(query, subject, lesson, act) {
+      const q = query.toLowerCase();
+      // 1. Intenções diretas sobre a aula ativa
+      if (q.includes('passo') || q.includes('como faz') || q.includes('calcul') || q.includes('cálcul') || q.includes('resolv')) {
+        return typeIntoNexo(`NEXO · Passo a passo (${lesson.title})`, act.steps);
+      }
+      if (q.includes('dica') || q.includes('prova') || q.includes('vestibular') || q.includes('enem') || q.includes('pegadinha')) {
+        return typeIntoNexo(`NEXO · Dica de prova (${lesson.title})`, act.tip);
+      }
+      if (q.includes('resum') || q.includes('conceit') || q.includes('explic') || q.includes('o que é') || q.includes('sobre')) {
+        return typeIntoNexo(`NEXO · Explicação (${lesson.title})`, `${act.concept}\n\nResumo da aula: ${lesson.summary}`);
+      }
+
+      // 2. Busca por palavras-chave em toda a base das 114 aulas
+      const terms = q.split(/\s+/).filter((t) => t.length > 2);
+      const matches = [];
+      SUBJECTS.forEach((s) => {
+        s.lessons.forEach((l, lIdx) => {
+          const hay = `${s.name} ${l.title} ${l.summary} ${l.activities.map((a) => `${a.title} ${a.answer}`).join(' ')}`.toLowerCase();
+          let score = 0;
+          terms.forEach((t) => { if (hay.includes(t)) score++; });
+          if (score > 0) matches.push({ score, subject: s, lesson: l, lIdx });
+        });
+      });
+
+      matches.sort((a, b) => b.score - a.score);
+      const top = matches.slice(0, 3);
+
+      if (top.length > 0) {
+        const best = top[0];
+        const msg = `Encontrei referência direta em ${best.subject.name} — Aula ${String(best.lesson.num).padStart(2, '0')} (${best.lesson.title}):\n\n${best.lesson.activities[0].answer}`;
+        const linksHtml = `
+          <div class="pt-3 mt-2 border-t border-white/10 space-y-1.5">
+            <div class="text-[11px] text-[#8a8a93]">Ir direto para a aula:</div>
+            ${top.map((m) => `
+              <button
+                data-jump-sub="${m.subject.id}"
+                data-jump-les="${m.lIdx}"
+                class="nexo-jump w-full text-left px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-xs text-white transition-colors"
+              >
+                ${m.subject.name} · Aula ${String(m.lesson.num).padStart(2, '0')} — ${escapeHtml(m.lesson.title)} →
+              </button>
+            `).join('')}
+          </div>
+        `;
+        typeIntoNexo(`NEXO · Busca para "${query}"`, msg, linksHtml);
+        setTimeout(() => {
+          document.querySelectorAll('.nexo-jump').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              openActivity(btn.dataset.jumpSub, Number(btn.dataset.jumpLes), 0);
+            });
+          });
+        }, 700);
+      } else {
+        typeIntoNexo(
+          'NEXO · Contexto da Aula',
+          `Não encontrei um termo exato para "${query}", mas nesta aula (${lesson.title}) o ponto central é:\n\n${act.concept}\n\nTente usar palavras-chave como "Kepler", "Barroco", "pH", "Mendel", "vértice" ou clique nos botões acima.`
+        );
+      }
+    }
+
+    /* =====================================================================
+       7. BUSCA GLOBAL INSTANTÂNEA (MODAL CTRL + K)
+       ===================================================================== */
+    const searchModal = document.getElementById('search-modal');
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+
+    function openSearchModal() {
+      searchModal.classList.remove('hidden');
+      searchModal.classList.add('flex');
+      searchInput.value = '';
+      renderSearchResults('');
+      setTimeout(() => searchInput.focus(), 20);
+    }
+
+    function closeSearchModal() {
+      searchModal.classList.add('hidden');
+      searchModal.classList.remove('flex');
+    }
+
+    function renderSearchResults(query) {
+      const q = query.trim().toLowerCase();
+      const results = [];
+
+      SUBJECTS.forEach((s) => {
+        s.lessons.forEach((l, lIdx) => {
+          l.activities.forEach((a, aIdx) => {
+            const hay = `${s.name} aula ${l.num} ${l.title} ${l.summary} ${a.title} ${a.answer}`.toLowerCase();
+            if (!q || hay.includes(q)) {
+              results.push({ subject: s, lesson: l, lIdx, act: a, aIdx });
+            }
+          });
+        });
+      });
+
+      const shown = results.slice(0, 24);
+      if (!shown.length) {
+        searchResults.innerHTML = `<div class="p-6 text-center text-xs text-[#8a8a93]">Nenhum resultado encontrado para "${escapeHtml(query)}".</div>`;
+        return;
+      }
+
+      searchResults.innerHTML = shown.map((r) => `
+        <button
+          data-s="${r.subject.id}"
+          data-l="${r.lIdx}"
+          data-a="${r.aIdx}"
+          class="search-item w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors flex items-start justify-between gap-3"
+        >
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 text-[11px] text-[#8a8a93] mb-0.5">
+              <span class="text-white/90 font-medium">${r.subject.name}</span>
+              <span>·</span>
+              <span>Aula ${String(r.lesson.num).padStart(2, '0')}</span>
+              <span>·</span>
+              <span>${r.act.type}</span>
+            </div>
+            <div class="text-sm text-white font-medium truncate">${escapeHtml(r.lesson.title)} — ${escapeHtml(r.act.title)}</div>
+            <div class="text-xs text-[#8a8a93] truncate mt-0.5">${escapeHtml(r.act.answer.replace(/\n/g, ' '))}</div>
+          </div>
+          <span class="text-xs text-[#6f6f78] shrink-0 mt-1">↵</span>
+        </button>
+      `).join('');
+
+      searchResults.querySelectorAll('.search-item').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          closeSearchModal();
+          openActivity(btn.dataset.s, Number(btn.dataset.l), Number(btn.dataset.a));
+        });
+      });
+    }
+
+    document.getElementById('btn-open-search').addEventListener('click', openSearchModal);
+    document.getElementById('btn-close-search').addEventListener('click', closeSearchModal);
+    document.getElementById('btn-logo-home').addEventListener('click', openHub);
+    searchModal.addEventListener('click', (e) => { if (e.target === searchModal) closeSearchModal(); });
+    searchInput.addEventListener('input', (e) => renderSearchResults(e.target.value));
+
+    /* =====================================================================
+       8. ATALHOS DE TECLADO GLOBAIS
+       ===================================================================== */
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (searchModal.classList.contains('hidden')) openSearchModal();
+        else closeSearchModal();
+        return;
+      }
+      if (e.key === 'Escape' && !searchModal.classList.contains('hidden')) {
+        closeSearchModal();
+        return;
+      }
+      if (!searchModal.classList.contains('hidden')) return;
+      if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      if (state.screen === 'hub') {
+        if (e.key === 'ArrowRight') moveHubCarousel(1);
+        else if (e.key === 'ArrowLeft') moveHubCarousel(-1);
+        else if (e.key === 'Enter') {
+          const list = getFilteredSubjects();
+          if (list[state.hubIndex]) openSubject(list[state.hubIndex].id);
+        }
+      }
+    });
+
+    // Inicialização
+    render();
+  </script>
+
+  <script src="assets/premium.js" defer></script>
+</body>
+</html>
